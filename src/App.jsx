@@ -82,7 +82,61 @@ const HALAL=[
 ];
 const SS={h:{l:"Халяль",c:C.green},x:{l:"Харам",c:C.red},"?":{l:"?",c:"#FBBF24"}};
 
-// Tasbih presets
+// ── Namaz guide ──
+const WUDU_STEPS=[
+  {n:"Ният",d:"Намерение в сердце совершить омовение ради Аллаха",icon:"🤲"},
+  {n:"Бисмиллях",d:"Скажите «Бисмилляхи-р-Рахмани-р-Рахим»",icon:"📿"},
+  {n:"Руки",d:"Вымойте кисти рук 3 раза, промывая между пальцами",icon:"🤚"},
+  {n:"Рот",d:"Прополощите рот 3 раза, набирая воду правой рукой",icon:"👄"},
+  {n:"Нос",d:"Промойте нос 3 раза — втяните воду и высморкайтесь",icon:"👃"},
+  {n:"Лицо",d:"Вымойте лицо 3 раза — от линии волос до подбородка",icon:"😌"},
+  {n:"Руки до локтей",d:"Вымойте правую руку до локтя 3 раза, затем левую",icon:"💪"},
+  {n:"Голова",d:"Протрите голову влажными руками от лба к затылку и обратно",icon:"🧑"},
+  {n:"Уши",d:"Протрите уши — указательным внутри, большим снаружи",icon:"👂"},
+  {n:"Ноги",d:"Вымойте правую ногу до щиколотки 3 раза, затем левую",icon:"🦶"},
+];
+const PRAYER_STEPS=[
+  {n:"Ният (намерение)",d:"Встаньте лицом к Кибле. Намерение в сердце о совершении конкретного намаза.",icon:"🧭",ar:""},
+  {n:"Такбират аль-ихрам",d:"Поднимите руки до уровня ушей и скажите вступительный такбир.",icon:"🙌",ar:"اللَّهُ أَكْبَرُ"},
+  {n:"Кыям (стояние)",d:"Сложите руки на груди (правая поверх левой). Прочтите суру Аль-Фатиха и дополнительную суру.",icon:"🧍",ar:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"},
+  {n:"Руку' (поклон)",d:"Скажите «Аллаху Акбар», наклонитесь, руки на колени, спина прямая. Скажите 3 раза:",icon:"🙇",ar:"سُبْحَانَ رَبِّيَ الْعَظِيمِ"},
+  {n:"Выпрямление",d:"Встаньте прямо со словами:",icon:"🧍",ar:"سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ"},
+  {n:"Суджуд (земной поклон)",d:"Опуститесь на колени, лоб и нос на полу, руки по сторонам головы. Скажите 3 раза:",icon:"🤲",ar:"سُبْحَانَ رَبِّيَ الْأَعْلَى"},
+  {n:"Сидение",d:"Сядьте на левую ногу, правую стопу поставьте. Скажите «Аллаху Акбар» и сделайте второй суджуд.",icon:"🪑",ar:"اللَّهُ أَكْبَرُ"},
+  {n:"Ташаххуд",d:"В последнем сидении прочтите ташаххуд, указывая указательным пальцем правой руки.",icon:"☝️",ar:"التَّحِيَّاتُ لِلَّهِ وَالصَّلَوَاتُ"},
+  {n:"Салям (завершение)",d:"Поверните голову направо, затем налево, каждый раз произнося:",icon:"👋",ar:"السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ"},
+];
+const PRAYER_RAKAATS={
+  "Фаджр":{fard:2,sunnah:"2 до"},
+  "Зухр":{fard:4,sunnah:"4 до + 2 после"},
+  "Аср":{fard:4,sunnah:"—"},
+  "Магриб":{fard:3,sunnah:"2 после"},
+  "Иша":{fard:4,sunnah:"2 после + 3 витр"},
+};
+
+// ── Quran surahs ──
+const QURAN_SURAHS=[
+  {n:1,ar:"الفاتحة",ru:"Аль-Фатиха (Открывающая)",ay:7,place:"Мекка",desc:"Главная молитва ислама. Читается в каждом ракаате намаза.",text:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ﴿١﴾ الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ ﴿٢﴾ الرَّحْمَٰنِ الرَّحِيمِ ﴿٣﴾ مَالِكِ يَوْمِ الدِّينِ ﴿٤﴾ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ﴿٥﴾ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ ﴿٦﴾ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ ﴿٧﴾",trans:"Во имя Аллаха Милостивого, Милосердного. Хвала Аллаху, Господу миров. Милостивому, Милосердному. Властелину Дня воздаяния. Тебе мы поклоняемся и Тебя просим о помощи. Веди нас прямым путём — путём тех, кого Ты облагодетельствовал, не тех, на кого пал гнев, и не заблудших.",cat:"fav"},
+  {n:2,ar:"البقرة",ru:"Аль-Бакара (Корова)",ay:286,place:"Медина",desc:"Самая длинная сура. Законы, история Адама, Ибрахима. Аят аль-Курси (2:255).",cat:"long"},
+  {n:3,ar:"آل عمران",ru:"Аль Имран (Семейство Имрана)",ay:200,place:"Медина",desc:"О семье Марьям, битва при Ухуде, терпение.",cat:"long"},
+  {n:4,ar:"النساء",ru:"Ан-Ниса (Женщины)",ay:176,place:"Медина",desc:"Права женщин, наследство, семейное право.",cat:"long"},
+  {n:12,ar:"يوسف",ru:"Юсуф",ay:111,place:"Мекка",desc:"«Прекраснейшая из историй» — жизнь пророка Юсуфа.",cat:"story"},
+  {n:18,ar:"الكهف",ru:"Аль-Кахф (Пещера)",ay:110,place:"Мекка",desc:"4 истории: юноши в пещере, два сада, Муса и Хидр, Зуль-Карнайн. Читают по пятницам.",cat:"fav"},
+  {n:19,ar:"مريم",ru:"Марьям",ay:98,place:"Мекка",desc:"Рождение Исы, история Закарии и Яхьи.",cat:"story"},
+  {n:36,ar:"يس",ru:"Ясин",ay:83,place:"Мекка",desc:"«Сердце Корана». О воскресении, знамениях Аллаха.",cat:"fav"},
+  {n:55,ar:"الرحمن",ru:"Ар-Рахман (Милостивый)",ay:78,place:"Медина",desc:"«Какую же из милостей вашего Господа вы отвергаете?» — повторяется 31 раз.",cat:"fav"},
+  {n:56,ar:"الواقعة",ru:"Аль-Вакиа (Событие)",ay:96,place:"Мекка",desc:"Три группы людей в Судный день. Пророк ﷺ рекомендовал читать каждую ночь.",cat:"fav"},
+  {n:67,ar:"الملك",ru:"Аль-Мульк (Власть)",ay:30,place:"Мекка",desc:"Защищает от мучений могилы. Пророк ﷺ читал каждую ночь перед сном.",cat:"fav"},
+  {n:78,ar:"النبأ",ru:"Ан-Наба (Весть)",ay:40,place:"Мекка",desc:"Начало 30-го джуза (Амма). О Судном дне.",cat:"juz30"},
+  {n:87,ar:"الأعلى",ru:"Аль-Аля (Всевышний)",ay:19,place:"Мекка",desc:"Восхваление Аллаха, лёгкость Корана.",cat:"juz30"},
+  {n:93,ar:"الضحى",ru:"Ад-Духа (Утро)",ay:11,place:"Мекка",desc:"Утешение Пророку ﷺ. «Твой Господь не покинул тебя».",cat:"juz30"},
+  {n:94,ar:"الشرح",ru:"Аш-Шарх (Раскрытие)",ay:8,place:"Мекка",desc:"«За трудностью — облегчение». Одна из самых коротких и мощных сур.",text:"أَلَمْ نَشْرَحْ لَكَ صَدْرَكَ ﴿١﴾ وَوَضَعْنَا عَنكَ وِزْرَكَ ﴿٢﴾ الَّذِي أَنقَضَ ظَهْرَكَ ﴿٣﴾ وَرَفَعْنَا لَكَ ذِكْرَكَ ﴿٤﴾ فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ﴿٥﴾ إِنَّ مَعَ الْعُسْرِ يُسْرًا ﴿٦﴾ فَإِذَا فَرَغْتَ فَانصَبْ ﴿٧﴾ وَإِلَىٰ رَبِّكَ فَارْغَب ﴿٨﴾",trans:"Разве Мы не раскрыли тебе грудь? И не сняли с тебя бремя, которое тяготило твою спину? И не возвысили тебе упоминание? Воистину, за трудностью — облегчение. Воистину, за трудностью — облегчение. Когда же освободишься — трудись. И к Господу своему устремись.",cat:"juz30"},
+  {n:96,ar:"العلق",ru:"Аль-Алак (Сгусток)",ay:19,place:"Мекка",desc:"Первое откровение! «Читай во имя Господа твоего, Который сотворил».",text:"اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ ﴿١﴾ خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ ﴿٢﴾ اقْرَأْ وَرَبُّكَ الْأَكْرَمُ ﴿٣﴾ الَّذِي عَلَّمَ بِالْقَلَمِ ﴿٤﴾ عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ ﴿٥﴾",trans:"Читай во имя Господа твоего, Который сотворил. Сотворил человека из сгустка. Читай! И Господь твой — Щедрейший. Который научил пером. Научил человека тому, чего тот не знал.",cat:"juz30"},
+  {n:112,ar:"الإخلاص",ru:"Аль-Ихлас (Искренность)",ay:4,place:"Мекка",desc:"Равна 1/3 Корана. Суть единобожия.",text:"قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ ﴿٤﴾",trans:"Скажи: «Он — Аллах Единый. Аллах Самодостаточный. Не родил и не был рождён. И нет никого, равного Ему».",cat:"fav"},
+  {n:113,ar:"الفلق",ru:"Аль-Фалак (Рассвет)",ay:5,place:"Мекка",desc:"Защитная сура. Прибежище от зла.",text:"قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ﴿١﴾ مِن شَرِّ مَا خَلَقَ ﴿٢﴾ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ﴿٣﴾ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ﴿٤﴾ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ ﴿٥﴾",trans:"Скажи: «Прибегаю к Господу рассвета от зла того, что Он сотворил, от зла мрака, когда он наступает, от зла колдующих, дующих на узлы, от зла завистника, когда он завидует».",cat:"juz30"},
+  {n:114,ar:"الناس",ru:"Ан-Нас (Люди)",ay:6,place:"Мекка",desc:"Последняя сура. Защита от наущений шайтана.",text:"قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴿١﴾ مَلِكِ النَّاسِ ﴿٢﴾ إِلَٰهِ النَّاسِ ﴿٣﴾ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ﴿٤﴾ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ﴿٥﴾ مِنَ الْجِنَّةِ وَالنَّاسِ ﴿٦﴾",trans:"Скажи: «Прибегаю к Господу людей, Царю людей, Богу людей, от зла наущающего отступающего — того, кто наущает в груди людей — из числа джиннов и людей».",cat:"juz30"},
+];
+const SURAH_CATS=[{id:"fav",l:"Важные суры",icon:"⭐"},{id:"juz30",l:"Джуз Амма",icon:"📖"},{id:"story",l:"Суры-истории",icon:"📜"},{id:"long",l:"Длинные суры",icon:"📚"}];
 const TASBIH_PRESETS=[
   {name:"Субханаллах",ar:"سُبْحَانَ اللَّهِ",ru:"Пречист Аллах",target:33,color:C.gold},
   {name:"Альхамдулиллях",ar:"الْحَمْدُ لِلَّهِ",ru:"Хвала Аллаху",target:33,color:C.green},
@@ -198,12 +252,16 @@ export default function KikoFull(){
   const compass=useCompass();
 
   const[tab,setTab]=useState("dashboard");
-  const[level,setLevel]=useState("beginner");
   const[now,setNow]=useState(new Date());
   // Sub-views
   const[selSite,setSelSite]=useState(null);
   const[selStory,setSelStory]=useState(null);
   const[expCat,setExpCat]=useState(null);
+  // Quran
+  const[selSurah,setSelSurah]=useState(null);
+  const[surahCat,setSurahCat]=useState("fav");
+  // Namaz guide
+  const[guideView,setGuideView]=useState("overview"); // overview|wudu|steps
   // Chat
   const[chatMsgs,setChatMsgs]=useState([]);
   const[chatIn,setChatIn]=useState("");
@@ -275,22 +333,22 @@ export default function KikoFull(){
   });
 
   const tabs=[
-    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"qibla",icon:"🧭",l:"Кибла"},
-    {id:"tasbih",icon:"📿",l:"Тасбих"},
-    {id:"sites",icon:"🗺",l:"Святыни"},{id:"stories",icon:"📜",l:"Коран"},{id:"mecca",icon:"📡",l:"Live"},
-    {id:"content",icon:"📖",l:"Дуа"},{id:"halal",icon:"🍽",l:"Халяль"},{id:"ummah",icon:"👥",l:"Умма"},
-    {id:"chat",icon:"💬",l:"AI"},
+    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"learn",icon:"📚",l:"Обучение"},
+    {id:"qibla",icon:"🧭",l:"Кибла"},{id:"tasbih",icon:"📿",l:"Тасбих"},
+    {id:"quran",icon:"📖",l:"Коран"},{id:"stories",icon:"📜",l:"Истории"},
+    {id:"sites",icon:"🗺",l:"Святыни"},{id:"mecca",icon:"📡",l:"Live"},
+    {id:"content",icon:"🤲",l:"Дуа"},{id:"halal",icon:"🍽",l:"Халяль"},
+    {id:"ummah",icon:"👥",l:"Умма"},{id:"chat",icon:"💬",l:"AI"},
   ];
   // Mobile bottom tabs
   const mobileTabs=[
-    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"qibla",icon:"🧭",l:"Кибла"},
+    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"quran",icon:"📖",l:"Коран"},
     {id:"tasbih",icon:"📿",l:"Тасбих"},{id:"chat",icon:"💬",l:"AI"},
   ];
   const[showMore,setShowMore]=useState(false);
   const moreTabs=tabs.filter(t=>!mobileTabs.find(mt=>mt.id===t.id));
 
-  const switchTab=(t)=>{setTab(t);setSelSite(null);setSelStory(null);setSelRoom(null);setJoined(false);setShowMore(false);};
-  const beg=level==="beginner";
+  const switchTab=(t)=>{setTab(t);setSelSite(null);setSelStory(null);setSelRoom(null);setJoined(false);setShowMore(false);setSelSurah(null);setGuideView("overview");};
 
   return(
     <div style={{minHeight:"100vh",minHeight:"100dvh",background:C.bg,color:C.cream,fontFamily:"'Segoe UI',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
@@ -301,11 +359,6 @@ export default function KikoFull(){
           <div><span style={{fontSize:14,fontWeight:700,color:C.gold}}>KIKO </span><span style={{fontSize:11,color:C.muted}}>Religion Mode</span></div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div style={{display:"flex",borderRadius:6,overflow:"hidden",border:`1px solid ${C.border}`,fontSize:9}}>
-            {[["beginner","Начинающий"],["advanced","Опытный"]].map(([v,l])=>(
-              <button key={v} onClick={()=>setLevel(v)} style={{background:level===v?C.gold:"transparent",color:level===v?C.bg:C.muted,border:"none",padding:"3px 8px",cursor:"pointer",fontWeight:600}}>{l}</button>
-            ))}
-          </div>
           <div style={{fontSize:17,fontWeight:300,color:C.cream,fontVariantNumeric:"tabular-nums"}}>{now.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</div>
         </div>
       </header>
@@ -356,7 +409,7 @@ export default function KikoFull(){
               </Card>
             </div>
             <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(3,1fr)":"repeat(5,1fr)",gap:8}}>
-              {[{i:"📿",l:"Тасбих",t:"tasbih"},{i:"🗺",l:"Святыни",t:"sites"},{i:"📜",l:"Коран",t:"stories"},{i:"📡",l:"Мекка",t:"mecca"},{i:"👥",l:"Умма",t:"ummah"}].map(a=>(
+              {[{i:"�",l:"Обучение",t:"learn"},{i:"📖",l:"Коран",t:"quran"},{i:"🗺",l:"Святыни",t:"sites"},{i:"📡",l:"Мекка",t:"mecca"},{i:"👥",l:"Умма",t:"ummah"}].map(a=>(
                 <Card key={a.t} onClick={()=>switchTab(a.t)} style={{textAlign:"center",padding:12}}>
                   <div style={{fontSize:22}}>{a.i}</div>
                   <div style={{fontSize:9,color:C.muted,marginTop:4}}>{a.l}</div>
@@ -369,13 +422,89 @@ export default function KikoFull(){
           {tab==="prayer"&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Время намаза</h2>
             <p style={{color:C.muted,fontSize:11,marginBottom:14}}>{loc.name} • {now.toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"})}</p>
-            {beg&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Мусульмане молятся 5 раз в день: <b>Фаджр</b> (до рассвета), <b>Зухр</b> (полдень), <b>Аср</b> (после обеда), <b>Магриб</b> (закат), <b>Иша</b> (ночь).</div></Card>}
-            {prayers.map(p=>{const past=p.min<=cm,isN=p.name===np.name;return(
-              <div key={p.name} style={{background:isN?`linear-gradient(135deg,${C.goldDim},${C.card})`:C.card,borderRadius:10,padding:"12px 18px",border:`1px solid ${isN?C.gold:C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",opacity:past?.45:1,marginBottom:6}}>
-                <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:22}}>{p.icon}</span><div><div style={{fontSize:14,fontWeight:isN?700:400,color:isN?C.gold:C.cream}}>{p.name}</div><div style={{fontSize:12,color:C.muted}}>{p.ar}</div></div></div>
-                <div style={{fontSize:22,fontWeight:300,color:isN?C.gold:C.cream,fontVariantNumeric:"tabular-nums"}}>{p.time}</div>
+            <Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Мусульмане молятся 5 раз в день. Нажмите на намаз, чтобы увидеть количество ракаатов.</div></Card>
+            {prayers.map(p=>{const past=p.min<=cm,isN=p.name===np.name;const rk=PRAYER_RAKAATS[p.name];return(
+              <div key={p.name} style={{background:isN?`linear-gradient(135deg,${C.goldDim},${C.card})`:C.card,borderRadius:10,padding:"12px 18px",border:`1px solid ${isN?C.gold:C.border}`,opacity:past?.45:1,marginBottom:6}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:22}}>{p.icon}</span><div><div style={{fontSize:14,fontWeight:isN?700:400,color:isN?C.gold:C.cream}}>{p.name}</div><div style={{fontSize:12,color:C.muted}}>{p.ar}</div></div></div>
+                  <div style={{fontSize:22,fontWeight:300,color:isN?C.gold:C.cream,fontVariantNumeric:"tabular-nums"}}>{p.time}</div>
+                </div>
+                {rk&&<div style={{display:"flex",gap:8,marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>
+                  <span style={{fontSize:10,color:C.gold,fontWeight:600}}>Фард: {rk.fard} ракаата</span>
+                  <span style={{fontSize:10,color:C.muted}}>Сунна: {rk.sunnah}</span>
+                </div>}
               </div>
             );})}
+            <button onClick={()=>switchTab("learn")} style={{marginTop:10,width:"100%",padding:"12px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:13,fontWeight:700,cursor:"pointer"}}>📚 Как совершать намаз — пошаговая инструкция</button>
+          </>}
+
+          {/* ═══ LEARN NAMAZ ═══ */}
+          {tab==="learn"&&<>
+            {guideView==="overview"&&<>
+              <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:14}}>Обучение намазу</h2>
+              <Card onClick={()=>setGuideView("wudu")} style={{marginBottom:8,display:"flex",alignItems:"center",gap:14,padding:16}}>
+                <div style={{fontSize:32}}>💧</div>
+                <div style={{flex:1}}><div style={{fontSize:15,fontWeight:600,color:C.cream}}>Омовение (Вуду)</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>10 шагов подготовки к намазу</div></div>
+                <span style={{color:C.muted,fontSize:16}}>→</span>
+              </Card>
+              <Card onClick={()=>setGuideView("steps")} style={{marginBottom:8,display:"flex",alignItems:"center",gap:14,padding:16}}>
+                <div style={{fontSize:32}}>🕌</div>
+                <div style={{flex:1}}><div style={{fontSize:15,fontWeight:600,color:C.cream}}>Порядок намаза</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>9 шагов от ният до салям</div></div>
+                <span style={{color:C.muted,fontSize:16}}>→</span>
+              </Card>
+              <Card style={{marginBottom:8,padding:16}}>
+                <Label>КОЛИЧЕСТВО РАКААТОВ</Label>
+                {Object.entries(PRAYER_RAKAATS).map(([name,rk])=>(
+                  <div key={name} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                    <span style={{fontSize:13,color:C.cream,fontWeight:600}}>{name}</span>
+                    <div style={{textAlign:"right"}}><span style={{fontSize:12,color:C.gold}}>{rk.fard} фард</span><span style={{fontSize:10,color:C.muted,marginLeft:8}}>{rk.sunnah}</span></div>
+                  </div>
+                ))}
+              </Card>
+              <Card style={{background:C.goldDim,padding:14}}>
+                <div style={{fontSize:12,color:C.cream,lineHeight:1.8}}>
+                  <b>5 столпов ислама:</b><br/>
+                  1. Шахада — свидетельство веры<br/>
+                  2. Намаз — пятикратная молитва<br/>
+                  3. Закят — обязательная милостыня<br/>
+                  4. Саум — пост в Рамадан<br/>
+                  5. Хадж — паломничество в Мекку
+                </div>
+              </Card>
+            </>}
+
+            {guideView==="wudu"&&<>
+              <button onClick={()=>setGuideView("overview")} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Обучение</button>
+              <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:4}}>💧 Омовение (Вуду)</h2>
+              <p style={{color:C.muted,fontSize:11,marginBottom:14}}>Обязательная подготовка перед намазом</p>
+              {WUDU_STEPS.map((s,i)=>(
+                <Card key={i} style={{padding:14,marginBottom:6,display:"flex",alignItems:"flex-start",gap:12}}>
+                  <div style={{width:36,height:36,borderRadius:"50%",background:C.goldDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{s.icon}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:600,color:C.gold}}>{i+1}. {s.n}</div>
+                    <div style={{fontSize:12,color:C.cream,marginTop:4,lineHeight:1.6}}>{s.d}</div>
+                  </div>
+                </Card>
+              ))}
+            </>}
+
+            {guideView==="steps"&&<>
+              <button onClick={()=>setGuideView("overview")} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Обучение</button>
+              <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:4}}>🕌 Порядок намаза</h2>
+              <p style={{color:C.muted,fontSize:11,marginBottom:14}}>Один ракаат — пошагово</p>
+              {PRAYER_STEPS.map((s,i)=>(
+                <Card key={i} style={{padding:14,marginBottom:6}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                    <div style={{width:36,height:36,borderRadius:"50%",background:C.goldDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{s.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:C.gold}}>{i+1}. {s.n}</div>
+                      <div style={{fontSize:12,color:C.cream,marginTop:4,lineHeight:1.6}}>{s.d}</div>
+                    </div>
+                  </div>
+                  {s.ar&&<div style={{fontSize:18,textAlign:"right",color:C.goldLight,lineHeight:1.8,marginTop:10,padding:"8px 12px",background:C.goldDim,borderRadius:8}}>{s.ar}</div>}
+                </Card>
+              ))}
+            </>}
           </>}
 
           {/* ═══ QIBLA ═══ */}
@@ -385,7 +514,7 @@ export default function KikoFull(){
             {compass.supported&&<div style={{fontSize:10,color:C.green,marginBottom:14}}>● Компас активен — поворачивайте телефон</div>}
             {!compass.supported&&compass.permissionNeeded&&<button onClick={compass.requestPermission} style={{background:C.gold,border:"none",borderRadius:8,padding:"8px 16px",color:C.bg,fontSize:11,fontWeight:600,cursor:"pointer",marginBottom:14}}>Включить компас</button>}
             {!compass.supported&&!compass.permissionNeeded&&<div style={{fontSize:10,color:C.muted,marginBottom:14}}>Компас недоступен — показан расчётный угол</div>}
-            {beg&&<Card style={{marginBottom:16,textAlign:"left",background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Кибла — направление на Каабу в Мекке. Мусульмане поворачиваются туда при молитве. {compass.supported?"Поворачивайте телефон до тех пор, пока стрелка не укажет вверх.":"Откройте на телефоне для живого компаса."}</div></Card>}
+            <Card style={{marginBottom:16,textAlign:"left",background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Кибла — направление на Каабу в Мекке. Мусульмане поворачиваются туда при молитве. {compass.supported?"Поворачивайте телефон до тех пор, пока стрелка не укажет вверх.":"Откройте на телефоне для живого компаса."}</div></Card>
             <svg viewBox="0 0 200 200" width={isMobile?Math.min(280,window.innerWidth-60):200} height={isMobile?Math.min(280,window.innerWidth-60):200} style={{margin:"0 auto",display:"block",transition:"transform .3s",transform:compass.supported?`rotate(${-(compass.heading||0)}deg)`:"none"}}>
               <circle cx="100" cy="100" r="96" fill="none" stroke={C.border} strokeWidth="1"/>
               <circle cx="100" cy="100" r="75" fill="none" stroke={C.border} strokeWidth=".5" strokeDasharray="3 3"/>
@@ -402,7 +531,7 @@ export default function KikoFull(){
           {tab==="tasbih"&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Тасбих (чётки)</h2>
             <p style={{color:C.muted,fontSize:11,marginBottom:14}}>Цифровой зикр с вибрацией</p>
-            {beg&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Тасбих — перебирание чёток с поминанием Аллаха. После каждого намаза рекомендуется 33×«Субханаллах», 33×«Альхамдулиллях», 33×«Аллаху Акбар».</div></Card>}
+            <Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Тасбих — перебирание чёток с поминанием Аллаха. После каждого намаза рекомендуется 33×«Субханаллах», 33×«Альхамдулиллях», 33×«Аллаху Акбар».</div></Card>
             <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
               {TASBIH_PRESETS.map((p,i)=>(
                 <button key={i} onClick={()=>{setTasbihPreset(i);setTasbihCount(0);}} style={{padding:"6px 12px",borderRadius:10,border:`1px solid ${tasbihPreset===i?p.color:C.border}`,background:tasbihPreset===i?`${p.color}20`:"transparent",color:tasbihPreset===i?p.color:C.muted,fontSize:10,fontWeight:600,cursor:"pointer"}}>{p.name}</button>
@@ -473,16 +602,17 @@ export default function KikoFull(){
             <h2 style={{fontSize:20,fontWeight:300,color:C.gold}}>{selSite.n}</h2>
             <div style={{fontSize:15,color:C.muted,marginBottom:2}}>{selSite.ar}</div>
             <div style={{fontSize:11,color:C.muted,marginBottom:14}}>📍 {selSite.city}, {selSite.co}</div>
-            <Card style={{marginBottom:12}}><Label>ОПИСАНИЕ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>{beg?selSite.db:selSite.d}</div></Card>
+            <Card style={{marginBottom:12}}><Label>ОПИСАНИЕ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>{selSite.d}</div></Card>
             {selSite.f&&<Card style={{marginBottom:12}}><Label>ОСОБЕННОСТИ</Label><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{selSite.f.map(f=><span key={f} style={{padding:"3px 10px",borderRadius:16,background:C.goldDim,color:C.goldLight,fontSize:11}}>{f}</span>)}</div></Card>}
             {selSite.yt&&<Card style={{padding:0,overflow:"hidden",marginBottom:12}}><div style={{aspectRatio:"16/9"}}><iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${selSite.yt}`} title={selSite.n} frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div></Card>}
+            {selSite.lat&&selSite.lng&&<Card style={{padding:0,overflow:"hidden",marginBottom:12}}><Label style={{padding:"10px 14px 0"}}>КАРТА</Label><div style={{aspectRatio:"16/9"}}><iframe width="100%" height="100%" src={`https://www.openstreetmap.org/export/embed.html?bbox=${selSite.lng-0.01}%2C${selSite.lat-0.01}%2C${selSite.lng+0.01}%2C${selSite.lat+0.01}&layer=mapnik&marker=${selSite.lat}%2C${selSite.lng}`} title={selSite.n} style={{border:"none"}}/></div></Card>}
           </>}
 
           {/* ═══ QURAN STORIES ═══ */}
           {tab==="stories"&&!selStory&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Истории Корана</h2>
             <p style={{color:C.muted,fontSize:11,marginBottom:14}}>{STORIES.length} историй пророков</p>
-            {beg&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Коран рассказывает истории пророков от Адама до Мухаммада ﷺ. Каждая содержит уроки и мудрость.</div></Card>}
+            <Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Коран рассказывает истории пророков от Адама до Мухаммада ﷺ. Каждая содержит уроки и мудрость.</div></Card>
             {STORIES.map((s,i)=>(
               <Card key={s.id} onClick={()=>setSelStory(s)} style={{padding:14,marginBottom:6,display:"flex",alignItems:"center",gap:12}}>
                 <div style={{width:36,height:36,borderRadius:"50%",background:C.goldDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:C.gold,flexShrink:0}}>{i+1}</div>
@@ -496,9 +626,45 @@ export default function KikoFull(){
             <h2 style={{fontSize:20,fontWeight:300,color:C.gold}}>{selStory.t}</h2>
             <div style={{fontSize:15,color:C.muted,marginBottom:2}}>{selStory.ar}</div>
             <div style={{fontSize:11,color:C.muted,marginBottom:14}}>📖 {selStory.s}</div>
-            <Card style={{marginBottom:12}}><Label>ИСТОРИЯ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.9}}>{beg?selStory.sb:selStory.sum}</div></Card>
+            <Card style={{marginBottom:12}}><Label>ИСТОРИЯ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.9}}>{selStory.sum}</div></Card>
             <Card style={{marginBottom:12}}><Label>УРОКИ</Label>{selStory.les.map((l,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}><div style={{width:5,height:5,borderRadius:"50%",background:C.gold,flexShrink:0}}/><span style={{fontSize:12,color:C.cream}}>{l}</span></div>)}</Card>
             <Card><Label>АЯТЫ</Label><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{selStory.ay.map(a=><span key={a} style={{padding:"3px 10px",borderRadius:16,background:C.goldDim,color:C.goldLight,fontSize:11}}>{a}</span>)}</div></Card>
+          </>}
+
+          {/* ═══ QURAN ═══ */}
+          {tab==="quran"&&!selSurah&&<>
+            <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Коран</h2>
+            <p style={{color:C.muted,fontSize:11,marginBottom:14}}>{QURAN_SURAHS.length} сур • Арабский текст и перевод</p>
+            <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+              {SURAH_CATS.map(c=>(
+                <button key={c.id} onClick={()=>setSurahCat(c.id)} style={{padding:"5px 12px",borderRadius:14,border:`1px solid ${surahCat===c.id?C.gold:C.border}`,background:surahCat===c.id?C.goldDim:"transparent",color:surahCat===c.id?C.gold:C.muted,fontSize:10,fontWeight:600,cursor:"pointer"}}>{c.icon} {c.l}</button>
+              ))}
+            </div>
+            {QURAN_SURAHS.filter(s=>s.cat===surahCat).map(s=>(
+              <Card key={s.n} onClick={()=>setSelSurah(s)} style={{padding:14,marginBottom:6,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:C.goldDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:C.gold,flexShrink:0}}>{s.n}</div>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontSize:14,fontWeight:600,color:C.cream}}>{s.ru}</div>
+                    <div style={{fontSize:16,color:C.goldLight}}>{s.ar}</div>
+                  </div>
+                  <div style={{fontSize:10,color:C.muted,marginTop:2}}>{s.ay} аятов • {s.place} {s.text?"• 📖 Есть текст":""}</div>
+                </div>
+                <span style={{color:C.muted}}>→</span>
+              </Card>
+            ))}
+          </>}
+          {tab==="quran"&&selSurah&&<>
+            <button onClick={()=>setSelSurah(null)} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Все суры</button>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+              <h2 style={{fontSize:20,fontWeight:300,color:C.gold}}>{selSurah.ru}</h2>
+              <div style={{fontSize:22,color:C.goldLight}}>{selSurah.ar}</div>
+            </div>
+            <div style={{fontSize:11,color:C.muted,marginBottom:14}}>Сура {selSurah.n} • {selSurah.ay} аятов • {selSurah.place}</div>
+            <Card style={{marginBottom:12}}><Label>О СУРЕ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>{selSurah.desc}</div></Card>
+            {selSurah.text&&<Card style={{marginBottom:12,background:C.goldDim}}><Label>АРАБСКИЙ ТЕКСТ</Label><div style={{fontSize:22,textAlign:"right",color:C.goldLight,lineHeight:2.2,direction:"rtl"}}>{selSurah.text}</div></Card>}
+            {selSurah.trans&&<Card style={{marginBottom:12}}><Label>ПЕРЕВОД</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.9}}>{selSurah.trans}</div></Card>}
+            {!selSurah.text&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>📖 Полный текст этой суры будет добавлен в следующих обновлениях.</div></Card>}
           </>}
 
           {/* ═══ MECCA LIVE ═══ */}
@@ -506,13 +672,13 @@ export default function KikoFull(){
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Мекка · Прямой эфир</h2>
             <p style={{color:C.muted,fontSize:11,marginBottom:14}}>Молитва со всеми из дома</p>
             <Card style={{padding:0,overflow:"hidden",marginBottom:12}}><div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube.com/embed/gvhVbNlqMOc?autoplay=0" title="Mecca" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div></Card>
-            {beg&&<Card style={{background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Прямая трансляция из Масджид аль-Харам. Смотрите молитву в Мекке в реальном времени.</div></Card>}
+            <Card style={{background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Прямая трансляция из Масджид аль-Харам. Смотрите молитву в Мекке в реальном времени.</div></Card>
           </>}
 
           {/* ═══ DUAS ═══ */}
           {tab==="content"&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:14}}>Дуа и поминания</h2>
-            {beg&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Дуа — обращение к Аллаху. Есть дуа на каждый случай. Произносите на арабском или на своём языке.</div></Card>}
+            <Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Дуа — обращение к Аллаху. Есть дуа на каждый случай. Произносите на арабском или на своём языке.</div></Card>
             {DUAS.map((d,i)=><Card key={i} style={{marginBottom:8}}><div style={{fontSize:11,color:C.gold,fontWeight:600,marginBottom:6}}>{d.o}</div><div style={{fontSize:18,textAlign:"right",color:C.goldLight,lineHeight:1.8,marginBottom:4}}>{d.ar}</div><div style={{fontSize:12,color:C.muted}}>{d.ru}</div></Card>)}
           </>}
 
@@ -520,7 +686,7 @@ export default function KikoFull(){
           {tab==="halal"&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Халяль-гид</h2>
             <p style={{color:C.muted,fontSize:11,marginBottom:12}}>Проверка продуктов и добавок</p>
-            {beg&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ <b>Халяль</b> = разрешено, <b>Харам</b> = запрещено (свинина, алкоголь), <b>?</b> = нужно проверить состав.</div></Card>}
+            <Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ <b>Халяль</b> = разрешено, <b>Харам</b> = запрещено (свинина, алкоголь), <b>?</b> = нужно проверить состав.</div></Card>
             <div style={{display:"flex",gap:10,marginBottom:12}}>{Object.entries(SS).map(([k,v])=><div key={k} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:7,height:7,borderRadius:"50%",background:v.c}}/><span style={{fontSize:10,color:C.muted}}>{v.l}</span></div>)}</div>
             {HALAL.map((cat,ci)=>(
               <div key={ci} style={{marginBottom:6}}>
@@ -642,9 +808,9 @@ export default function KikoFull(){
           {/* ═══ AI CHAT ═══ */}
           {tab==="chat"&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>AI Помощник</h2>
-            <p style={{color:C.muted,fontSize:11,marginBottom:10}}>Режим: {beg?"простые объяснения":"подробно с терминами"} • Офлайн</p>
+            <p style={{color:C.muted,fontSize:11,marginBottom:10}}>Исламский помощник • Офлайн</p>
             {chatMsgs.length===0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:12}}>
-              {(beg?["С чего начать молитву?","Что такое халяль?","Как делать омовение?","Зачем нужен пост?"]:["Разница мазхабов","Условия намаза","Правила закята","Масаиль путника"]).map(q=>
+              {["С чего начать молитву?","Что такое халяль?","Как делать омовение?","Условия намаза","Правила закята","Зачем нужен пост?"].map(q=>
                 <button key={q} onClick={()=>setChatIn(q)} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"5px 12px",color:C.cream,fontSize:10,cursor:"pointer"}}>{q}</button>
               )}
             </div>}
