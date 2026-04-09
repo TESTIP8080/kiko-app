@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="40" fill="#080F0C"/>
+  <circle cx="96" cy="80" r="45" fill="none" stroke="#C9A84C" stroke-width="2"/>
+  <path d="M96 35 L96 55" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="96,40 91,52 101,52" fill="#C9A84C"/>
+  <circle cx="96" cy="80" r="5" fill="#C9A84C"/>
+  <text x="96" y="155" text-anchor="middle" fill="#C9A84C" font-family="system-ui" font-size="28" font-weight="700">KIKO</text>
+</svg>
