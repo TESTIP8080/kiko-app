@@ -1,4 +1,4 @@
-const CACHE = 'kiko-v1';
+const CACHE = 'kiko-v3';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {
