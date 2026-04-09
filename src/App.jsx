@@ -5,10 +5,11 @@ const DEFAULT_LOC = { lat: 42.85, lng: 74.53, name: "Кант, Кыргызст�
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
 
 const C = {
-  bg:"#06090A",card:"rgba(15,25,22,0.85)",gold:"#D4AF37",goldLight:"#F0D78C",goldDim:"rgba(212,175,55,0.12)",
-  cream:"#F7F3EB",muted:"#8B9E94",accent:"#0F3D2E",border:"rgba(212,175,55,0.10)",
-  glow:"rgba(212,175,55,0.04)",green:"#34D399",red:"#FB7185",blue:"#6CB4EE",purple:"#B197FC",
-  glass:"rgba(15,25,22,0.6)",gradG:"linear-gradient(135deg,#D4AF37,#B8860B)",gradD:"linear-gradient(135deg,#0F3D2E,#06090A)",
+  bg:"#040D08",card:"rgba(8,30,20,0.85)",gold:"#D4AF37",goldLight:"#F0D78C",goldDim:"rgba(212,175,55,0.12)",
+  cream:"#F0F5F1",muted:"#7BA393",accent:"#0D6B3D",border:"rgba(45,212,191,0.12)",
+  glow:"rgba(45,212,191,0.06)",green:"#34D399",red:"#FB7185",blue:"#6CB4EE",purple:"#B197FC",
+  glass:"rgba(8,30,20,0.6)",gradG:"linear-gradient(135deg,#D4AF37,#0D6B3D)",gradD:"linear-gradient(135deg,#0A5C34,#040D08)",
+  teal:"#2DD4BF",emerald:"#0D6B3D",
 };
 
 // ── Prayer calc (auto timezone) ──
@@ -179,12 +180,12 @@ const ROOMS=[
 const MUSERS=[{n:"Абдурахман",c:"Бишкек 🇰🇬",a:"🧔"},{n:"Аиша",c:"Алматы 🇰🇿",a:"🧕"},{n:"محمد",c:"القاهرة 🇪🇬",a:"👳"},{n:"Нурлан",c:"Ташкент 🇺🇿",a:"🧔‍♂️"},{n:"Fatima",c:"London 🇬🇧",a:"🧕"},{n:"Ильяс",c:"Казань 🇷🇺",a:"👤"},{n:"عبدالله",c:"الرياض 🇸🇦",a:"👳‍♂️"},{n:"Зарина",c:"Душанбе 🇹🇯",a:"🧕"}];
 
 // ── Components ──
-const Card=({children,style,onClick})=><div onClick={onClick} style={{background:C.glass,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:16,padding:20,border:`1px solid ${C.border}`,transition:"all .3s cubic-bezier(.4,0,.2,1)",cursor:onClick?"pointer":"default",boxShadow:"0 4px 24px rgba(0,0,0,.3)",...style}} onMouseEnter={onClick?e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(212,175,55,.15)";}:undefined} onMouseLeave={onClick?e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,.3)";}:undefined}>{children}</div>;
+const Card=({children,style,onClick})=><div onClick={onClick} style={{background:C.glass,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:16,padding:20,border:`1px solid ${C.border}`,transition:"all .3s cubic-bezier(.4,0,.2,1)",cursor:onClick?"pointer":"default",boxShadow:"0 4px 24px rgba(0,0,0,.3)",...style}} onMouseEnter={onClick?e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(45,212,191,.15)";}:undefined} onMouseLeave={onClick?e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,.3)";}:undefined}>{children}</div>;
 const Label=({children,style})=><div style={{fontSize:10,color:C.gold,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",marginBottom:10,...style}}>{children}</div>;
 const Badge=({children,color=C.gold,small})=><span style={{padding:small?"2px 8px":"4px 12px",borderRadius:20,background:`${color}15`,color,fontSize:small?9:10,fontWeight:700,whiteSpace:"nowrap",border:`1px solid ${color}30`}}>{children}</span>;
 const Dot=({live})=><span style={{width:7,height:7,borderRadius:"50%",background:live?C.red:C.green,display:"inline-block",marginRight:4,animation:live?"pulse 1.5s infinite":"none",boxShadow:live?`0 0 8px ${C.red}`:"none"}}/>;
 const PBar=({v,m,color=C.gold})=><div style={{height:3,borderRadius:2,background:"rgba(255,255,255,.06)",width:"100%",marginTop:5}}><div style={{height:"100%",borderRadius:2,background:`linear-gradient(90deg,${color},${color}90)`,width:`${Math.min(100,v/m*100)}%`,transition:"width .5s"}}/></div>;
-const ImgCard=({src,alt,h=200,children,style,onClick})=><div onClick={onClick} style={{borderRadius:16,overflow:"hidden",position:"relative",cursor:onClick?"pointer":"default",transition:"all .3s",border:`1px solid ${C.border}`,boxShadow:"0 4px 24px rgba(0,0,0,.4)",...style}} onMouseEnter={onClick?e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 40px rgba(212,175,55,.2)";}:undefined} onMouseLeave={onClick?e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,.4)";}:undefined}><img src={src} alt={alt} loading="lazy" style={{width:"100%",height:h,objectFit:"cover",display:"block"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(6,9,10,.95))",padding:"40px 16px 14px"}}>{children}</div></div>;
+const ImgCard=({src,alt,h=200,children,style,onClick})=><div onClick={onClick} style={{borderRadius:16,overflow:"hidden",position:"relative",cursor:onClick?"pointer":"default",transition:"all .3s",border:`1px solid ${C.border}`,boxShadow:"0 4px 24px rgba(0,0,0,.4)",...style}} onMouseEnter={onClick?e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 40px rgba(45,212,191,.2)";}:undefined} onMouseLeave={onClick?e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,.4)";}:undefined}><img src={src} alt={alt} loading="lazy" style={{width:"100%",height:h,objectFit:"cover",display:"block"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(4,13,8,.95))",padding:"40px 16px 14px"}}>{children}</div></div>;
 
 // ── useMediaQuery ──
 function useIsMobile(){
@@ -365,9 +366,9 @@ export default function KikoFull(){
   return(
     <div style={{minHeight:"100vh",minHeight:"100dvh",background:C.bg,color:C.cream,fontFamily:"'Segoe UI',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
       {/* Header */}
-      <header style={{padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${C.border}`,background:"rgba(6,9,10,.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100}}>
+      <header style={{padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${C.border}`,background:"rgba(4,13,8,.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <div style={{width:34,height:34,borderRadius:10,background:C.gradG,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#06090A",boxShadow:"0 2px 12px rgba(212,175,55,.3)"}}>K</div>
+          <div style={{width:34,height:34,borderRadius:10,background:C.gradG,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#040D08",boxShadow:"0 2px 12px rgba(13,107,61,.4)"}}>K</div>
           <div><span style={{fontSize:15,fontWeight:800,color:C.gold,letterSpacing:.5}}>KIKO</span><span style={{fontSize:11,color:C.muted,marginLeft:6,fontWeight:300}}>Islamic Guide</span></div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -377,9 +378,9 @@ export default function KikoFull(){
 
       <div style={{display:"flex",flex:1,overflow:"hidden",paddingBottom:isMobile?62:0}}>
         {/* Sidebar — desktop only */}
-        {!isMobile&&<nav style={{width:64,minWidth:64,background:"rgba(6,9,10,.6)",backdropFilter:"blur(12px)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",paddingTop:4,overflowY:"auto"}}>
+        {!isMobile&&<nav style={{width:64,minWidth:64,background:"rgba(4,13,8,.6)",backdropFilter:"blur(12px)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",paddingTop:4,overflowY:"auto"}}>
           {tabs.map(t=>(
-            <button key={t.id} onClick={()=>switchTab(t.id)} style={{background:tab===t.id?"rgba(212,175,55,.08)":"transparent",border:"none",borderLeft:tab===t.id?`2px solid ${C.gold}`:"2px solid transparent",color:tab===t.id?C.gold:C.muted,padding:"10px 2px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontSize:16,transition:"all .2s"}}>
+            <button key={t.id} onClick={()=>switchTab(t.id)} style={{background:tab===t.id?"rgba(45,212,191,.1)":"transparent",border:"none",borderLeft:tab===t.id?`2px solid ${C.teal}`:"2px solid transparent",color:tab===t.id?C.teal:C.muted,padding:"10px 2px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontSize:16,transition:"all .2s"}}>
               <span>{t.icon}</span><span style={{fontSize:7,fontWeight:600}}>{t.l}</span>
             </button>
           ))}
@@ -395,13 +396,13 @@ export default function KikoFull(){
             {/* Hero prayer card with Kaaba background */}
             <div style={{borderRadius:18,overflow:"hidden",marginBottom:16,position:"relative",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg/1280px-Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg" alt="Мекка" style={{width:"100%",height:isMobile?200:240,objectFit:"cover",display:"block",filter:"brightness(.4)"}} loading="lazy"/>
-              <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,rgba(6,9,10,.2) 0%,rgba(6,9,10,.85) 70%,rgba(6,9,10,.98) 100%)",padding:isMobile?"16px":"24px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,rgba(4,13,8,.2) 0%,rgba(4,13,8,.85) 70%,rgba(4,13,8,.98) 100%)",padding:isMobile?"16px":"24px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
                 <div style={{fontSize:11,color:C.muted,marginBottom:4}}>Следующий намаз • {loc.name}</div>
                 <div style={{fontSize:isMobile?24:30,fontWeight:700,color:C.gold,lineHeight:1.2}}>{np.icon} {np.name} <span style={{fontWeight:200,fontSize:isMobile?18:22,color:C.cream}}>{np.time}</span></div>
                 <div style={{fontSize:13,color:C.muted,marginTop:4}}>через <span style={{color:C.goldLight,fontWeight:600}}>{Math.floor(until/60)}ч {until%60}мин</span></div>
                 <div style={{display:"flex",gap:5,marginTop:14,flexWrap:"wrap"}}>
                   {prayers.map(p=>(
-                    <span key={p.name} style={{padding:"4px 10px",borderRadius:8,fontSize:10,background:p.name===np.name?C.gold:p.min<=cm?"rgba(255,255,255,.04)":"rgba(212,175,55,.12)",color:p.name===np.name?"#06090A":p.min<=cm?C.muted:C.cream,fontWeight:p.name===np.name?700:400,opacity:p.min<=cm?.5:1,backdropFilter:"blur(4px)"}}>{p.icon} {p.name} {p.time}</span>
+                    <span key={p.name} style={{padding:"4px 10px",borderRadius:8,fontSize:10,background:p.name===np.name?C.gold:p.min<=cm?"rgba(255,255,255,.04)":"rgba(45,212,191,.1)",color:p.name===np.name?"#040D08":p.min<=cm?C.muted:C.cream,fontWeight:p.name===np.name?700:400,opacity:p.min<=cm?.5:1,backdropFilter:"blur(4px)"}}>{p.icon} {p.name} {p.time}</span>
                   ))}
                 </div>
               </div>
@@ -426,7 +427,7 @@ export default function KikoFull(){
               </Card>
             </div>
             <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(3,1fr)":"repeat(5,1fr)",gap:10}}>
-              {[{i:"📚",l:"Обучение",t:"learn",g:"#0F3D2E"},{i:"📖",l:"Коран",t:"quran",g:"#1a3a1a"},{i:"🗺",l:"Святыни",t:"sites",g:"#2a1f0f"},{i:"📡",l:"Мекка",t:"mecca",g:"#1f0f0f"},{i:"👥",l:"Умма",t:"ummah",g:"#0f1f2f"}].map(a=>(
+              {[{i:"📚",l:"Обучение",t:"learn",g:"#0D6B3D"},{i:"📖",l:"Коран",t:"quran",g:"#0A5C34"},{i:"🗺",l:"Святыни",t:"sites",g:"#1a4030"},{i:"📡",l:"Мекка",t:"mecca",g:"#0f2820"},{i:"👥",l:"Умма",t:"ummah",g:"#0f2a28"}].map(a=>(
                 <Card key={a.t} onClick={()=>switchTab(a.t)} style={{textAlign:"center",padding:14,background:`linear-gradient(135deg,${a.g},${C.bg})`}}>
                   <div style={{fontSize:26,marginBottom:4,filter:"drop-shadow(0 2px 8px rgba(0,0,0,.5))"}}>{a.i}</div>
                   <div style={{fontSize:10,color:C.cream,fontWeight:600}}>{a.l}</div>
@@ -618,7 +619,7 @@ export default function KikoFull(){
             {/* Hero image */}
             <div style={{borderRadius:16,overflow:"hidden",marginBottom:16,position:"relative",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
               <img src={selSite.img||`https://img.youtube.com/vi/${selSite.yt}/hqdefault.jpg`} alt={selSite.n} style={{width:"100%",height:isMobile?220:300,objectFit:"cover",display:"block"}} loading="lazy"/>
-              <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(6,9,10,.95))",padding:"50px 20px 16px"}}>
+              <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(4,13,8,.95))",padding:"50px 20px 16px"}}>
                 <h2 style={{fontSize:22,fontWeight:700,color:C.cream,margin:0}}>{selSite.n}</h2>
                 <div style={{fontSize:14,color:C.goldLight}}>{selSite.ar}</div>
                 <div style={{fontSize:11,color:C.muted,marginTop:2}}>📍 {selSite.city}, {selSite.co}</div>
@@ -685,7 +686,7 @@ export default function KikoFull(){
             <div style={{fontSize:11,color:C.muted,marginBottom:14}}>Сура {selSurah.n} • {selSurah.ay} аятов • {selSurah.place}</div>
             <Card style={{marginBottom:12}}><Label>О СУРЕ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>{selSurah.desc}</div></Card>
             {selSurah.text&&<Card style={{marginBottom:12,background:C.goldDim}}><Label>АРАБСКИЙ ТЕКСТ</Label><div style={{fontSize:22,textAlign:"right",color:C.goldLight,lineHeight:2.2,direction:"rtl"}}>{selSurah.text}</div></Card>}
-            {selSurah.tl&&<Card style={{marginBottom:12,background:"rgba(201,168,76,0.08)"}}><Label>📖 ТРАНСЛИТЕРАЦИЯ (как читать)</Label><div style={{fontSize:13,color:C.goldLight,lineHeight:1.9,fontStyle:"italic"}}>{selSurah.tl}</div></Card>}
+            {selSurah.tl&&<Card style={{marginBottom:12,background:"rgba(45,212,191,0.06)"}}><Label>📖 ТРАНСЛИТЕРАЦИЯ (как читать)</Label><div style={{fontSize:13,color:C.goldLight,lineHeight:1.9,fontStyle:"italic"}}>{selSurah.tl}</div></Card>}
             {selSurah.trans&&<Card style={{marginBottom:12}}><Label>ПЕРЕВОД НА РУССКИЙ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.9}}>{selSurah.trans}</div></Card>}
             {!selSurah.text&&<Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>📖 Полный текст этой суры будет добавлен в следующих обновлениях.</div></Card>}
           </>}
@@ -796,7 +797,7 @@ export default function KikoFull(){
             {selRoom.proj&&<Card style={{padding:0,overflow:"hidden",marginBottom:12}}>
               {selRoom.proj==="Мекка Live"||selRoom.proj==="Аль-Азхар Live"?
                 <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube.com/embed/gvhVbNlqMOc?autoplay=0" title="Stream" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div>:
-                <div style={{aspectRatio:"16/9",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(180deg,rgba(201,168,76,.05),rgba(0,0,0,.9))"}}>
+                <div style={{aspectRatio:"16/9",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(180deg,rgba(45,212,191,.05),rgba(4,13,8,.9))"}}>
                   <div style={{textAlign:"center"}}><div style={{fontSize:36,marginBottom:8}}>📽</div><div style={{fontSize:14,color:C.gold}}>{selRoom.proj}</div></div>
                 </div>
               }
@@ -866,18 +867,18 @@ export default function KikoFull(){
 
       {/* ═══ MOBILE BOTTOM NAV ═══ */}
       {isMobile&&<>
-        <nav style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:"rgba(6,9,10,.96)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:100,paddingBottom:"env(safe-area-inset-bottom)"}}>
+        <nav style={{position:"fixed",bottom:0,left:0,right:0,height:60,background:"rgba(4,13,8,.96)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-around",zIndex:100,paddingBottom:"env(safe-area-inset-bottom)"}}>
           {mobileTabs.map(t=>(
-            <button key={t.id} onClick={()=>switchTab(t.id)} style={{background:"none",border:"none",color:tab===t.id?C.gold:C.muted,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",padding:"6px 10px",position:"relative",transition:"color .2s"}}>
+            <button key={t.id} onClick={()=>switchTab(t.id)} style={{background:"none",border:"none",color:tab===t.id?C.teal:C.muted,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",padding:"6px 10px",position:"relative",transition:"color .2s"}}>
               <span style={{fontSize:22}}>{t.icon}</span>
               <span style={{fontSize:8,fontWeight:700}}>{t.l}</span>
-              {tab===t.id&&<div style={{position:"absolute",top:-1,width:24,height:2,borderRadius:1,background:C.gold,boxShadow:`0 0 8px ${C.gold}`}}/>}
+              {tab===t.id&&<div style={{position:"absolute",top:-1,width:24,height:2,borderRadius:1,background:C.teal,boxShadow:`0 0 8px ${C.teal}`}}/>}
             </button>
           ))}
-          <button onClick={()=>setShowMore(!showMore)} style={{background:"none",border:"none",color:moreTabs.find(t=>t.id===tab)?C.gold:C.muted,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",padding:"4px 8px",position:"relative"}}>
+          <button onClick={()=>setShowMore(!showMore)} style={{background:"none",border:"none",color:moreTabs.find(t=>t.id===tab)?C.teal:C.muted,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",padding:"4px 8px",position:"relative"}}>
             <span style={{fontSize:20}}>☰</span>
             <span style={{fontSize:8,fontWeight:600}}>Ещё</span>
-            {moreTabs.find(t=>t.id===tab)&&<div style={{position:"absolute",top:-1,width:20,height:2,borderRadius:1,background:C.gold}}/>}
+            {moreTabs.find(t=>t.id===tab)&&<div style={{position:"absolute",top:-1,width:20,height:2,borderRadius:1,background:C.teal}}/>}
           </button>
         </nav>
         {showMore&&<div style={{position:"fixed",bottom:58,right:8,background:C.card,borderRadius:12,border:`1px solid ${C.border}`,padding:6,zIndex:101,boxShadow:"0 -4px 20px rgba(0,0,0,.5)",minWidth:140}}>
