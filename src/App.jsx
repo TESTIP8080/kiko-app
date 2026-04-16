@@ -6,7 +6,14 @@ const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
 
 // Плейсхолдер на случай если картинка не загрузилась
 const IMG_PLACEHOLDER = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="#0a1510"/><circle cx="200" cy="130" r="48" fill="none" stroke="#D4AF37" stroke-width="2" opacity="0.5"/><path d="M200 90 L200 110" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" opacity="0.7"/><polygon points="200,95 196,105 204,105" fill="#D4AF37" opacity="0.7"/><circle cx="200" cy="130" r="4" fill="#D4AF37"/><text x="200" y="220" text-anchor="middle" fill="#7BA393" font-family="system-ui" font-size="12">Mizan</text></svg>');
-const imgErr = (e)=>{if(e.currentTarget.src!==IMG_PLACEHOLDER)e.currentTarget.src=IMG_PLACEHOLDER;};
+// Каскад fallback: maxresdefault → sddefault → hqdefault → mqdefault → placeholder
+const imgErr = (e)=>{
+  const el=e.currentTarget;const src=el.src;
+  if(src.includes("maxresdefault"))el.src=src.replace("maxresdefault","sddefault");
+  else if(src.includes("sddefault"))el.src=src.replace("sddefault","hqdefault");
+  else if(src.includes("hqdefault"))el.src=src.replace("hqdefault","mqdefault");
+  else if(src!==IMG_PLACEHOLDER)el.src=IMG_PLACEHOLDER;
+};
 
 const C = {
   bg:"#040D08",card:"rgba(8,30,20,0.85)",gold:"#D4AF37",goldLight:"#F0D78C",goldDim:"rgba(212,175,55,0.12)",
@@ -633,7 +640,7 @@ export default function KikoFull(){
             {geoLoading&&<div style={{fontSize:11,color:C.muted,marginBottom:8,textAlign:"center"}}>📍 Определяем местоположение...</div>}
             {/* Hero prayer card — lightweight */}
             <div style={{borderRadius:16,overflow:"hidden",marginBottom:14,position:"relative"}}>
-              <img src="https://img.youtube.com/vi/gvhVbNlqMOc/hqdefault.jpg" alt="Мекка" style={{width:"100%",height:isMobile?180:220,objectFit:"cover",display:"block",filter:"brightness(.35)"}} loading="lazy" onError={imgErr}/>
+              <img src="https://img.youtube.com/vi/gvhVbNlqMOc/maxresdefault.jpg" alt="Мекка" style={{width:"100%",height:isMobile?180:220,objectFit:"cover",display:"block",filter:"brightness(.35)"}} loading="lazy" onError={imgErr}/>
               <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,transparent 0%,rgba(4,13,8,.85) 65%,rgba(4,13,8,.98) 100%)",padding:isMobile?"14px":"20px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
                 <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{loc.name} • {hijri.day} {hijri.monthName}</div>
                 <div style={{fontSize:isMobile?22:28,fontWeight:600,color:C.gold,lineHeight:1.2}}>{np.icon} {np.name} <span style={{fontWeight:200,fontSize:isMobile?16:20,color:C.cream}}>{np.time}</span></div>
@@ -1093,7 +1100,7 @@ export default function KikoFull(){
             {/* Featured top 3 with photos */}
             <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr",gap:12,marginBottom:16}}>
               {SITES.filter(s=>s.rank&&s.rank<=3).map(s=>(
-                <ImgCard key={s.id} src={s.img} alt={s.n} h={isMobile?180:220} onClick={()=>setSelSite(s)}>
+                <ImgCard key={s.id} src={s.img||`https://img.youtube.com/vi/${s.yt}/maxresdefault.jpg`} alt={s.n} h={isMobile?180:220} onClick={()=>setSelSite(s)}>
                   <div style={{fontSize:15,fontWeight:700,color:C.cream}}>{s.n}</div>
                   <div style={{fontSize:10,color:C.goldLight}}>{s.ar} • {s.city}</div>
                 </ImgCard>
@@ -1102,7 +1109,7 @@ export default function KikoFull(){
             {/* Rest as list with thumbnails */}
             {SITES.filter(s=>!s.rank||s.rank>3).map(s=>(
               <Card key={s.id} onClick={()=>setSelSite(s)} style={{padding:0,marginBottom:8,display:"flex",overflow:"hidden"}}>
-                <img src={s.img||`https://img.youtube.com/vi/${s.yt}/default.jpg`} alt={s.n} loading="lazy" onError={imgErr} style={{width:90,height:70,objectFit:"cover",flexShrink:0}}/>
+                <img src={s.img||`https://img.youtube.com/vi/${s.yt}/mqdefault.jpg`} alt={s.n} loading="lazy" onError={imgErr} style={{width:120,height:80,objectFit:"cover",flexShrink:0}}/>
                 <div style={{padding:"10px 14px",flex:1,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div><div style={{fontSize:13,fontWeight:600,color:C.cream}}>{s.n}</div><div style={{fontSize:10,color:C.muted}}>{s.ar} • {s.city}, {s.co}</div></div>
                   <span style={{color:C.gold,fontSize:16}}>→</span>
@@ -1114,7 +1121,7 @@ export default function KikoFull(){
             <button onClick={()=>setSelSite(null)} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Все святыни</button>
             {/* Hero image */}
             <div style={{borderRadius:16,overflow:"hidden",marginBottom:16,position:"relative",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
-              <img src={selSite.img||`https://img.youtube.com/vi/${selSite.yt}/hqdefault.jpg`} alt={selSite.n} style={{width:"100%",height:isMobile?220:300,objectFit:"cover",display:"block"}} loading="lazy" onError={imgErr}/>
+              <img src={selSite.img||`https://img.youtube.com/vi/${selSite.yt}/maxresdefault.jpg`} alt={selSite.n} style={{width:"100%",height:isMobile?220:300,objectFit:"cover",display:"block"}} loading="lazy" onError={imgErr}/>
               <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(4,13,8,.95))",padding:"50px 20px 16px"}}>
                 <h2 style={{fontSize:22,fontWeight:700,color:C.cream,margin:0}}>{selSite.n}</h2>
                 <div style={{fontSize:14,color:C.goldLight}}>{selSite.ar}</div>
@@ -1123,7 +1130,7 @@ export default function KikoFull(){
             </div>
             <Card style={{marginBottom:12}}><Label>ОПИСАНИЕ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>{selSite.d}</div></Card>
             {selSite.f&&<Card style={{marginBottom:12}}><Label>ОСОБЕННОСТИ</Label><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{selSite.f.map(f=><span key={f} style={{padding:"4px 12px",borderRadius:20,background:C.goldDim,color:C.goldLight,fontSize:11,border:`1px solid ${C.border}`}}>{f}</span>)}</div></Card>}
-            {selSite.yt&&<Card style={{padding:0,overflow:"hidden",marginBottom:12,borderRadius:16}}><Label style={{padding:"14px 16px 6px"}}>🎬 ВИДЕО</Label><div style={{aspectRatio:"16/9"}}><iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${selSite.yt}`} title={selSite.n} frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div></Card>}
+            {selSite.yt&&<Card style={{padding:0,overflow:"hidden",marginBottom:12,borderRadius:16}}><Label style={{padding:"14px 16px 6px"}}>🎬 ВИДЕО</Label><div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src={`https://www.youtube-nocookie.com/embed/${selSite.yt}?rel=0&modestbranding=1&playsinline=1`} title={selSite.n} frameBorder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen style={{border:"none"}}/></div><a href={`https://www.youtube.com/watch?v=${selSite.yt}`} target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"10px 16px",fontSize:11,color:C.gold,textDecoration:"none",borderTop:`1px solid ${C.border}`,textAlign:"center"}}>▶ Открыть на YouTube</a></Card>}
             {selSite.lat&&selSite.lng&&<Card style={{padding:0,overflow:"hidden",marginBottom:12,borderRadius:16}}><Label style={{padding:"14px 16px 6px"}}>🗺 РАСПОЛОЖЕНИЕ</Label><div style={{aspectRatio:"16/9"}}><iframe width="100%" height="100%" src={`https://www.openstreetmap.org/export/embed.html?bbox=${selSite.lng-0.01}%2C${selSite.lat-0.01}%2C${selSite.lng+0.01}%2C${selSite.lat+0.01}&layer=mapnik&marker=${selSite.lat}%2C${selSite.lng}`} title={selSite.n} style={{border:"none"}}/></div></Card>}
           </>}
 
@@ -1193,11 +1200,13 @@ export default function KikoFull(){
             <p style={{color:C.muted,fontSize:11,marginBottom:16}}>Из священных мечетей — 24/7</p>
             <Card style={{padding:0,overflow:"hidden",marginBottom:14,borderRadius:16}}>
               <Label style={{padding:"14px 16px 6px"}}>🕌 МАСДЖИД АЛЬ-ХАРАМ • Мекка</Label>
-              <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube.com/embed/gvhVbNlqMOc?autoplay=0" title="Mecca" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div>
+              <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube-nocookie.com/embed/gvhVbNlqMOc?rel=0&modestbranding=1&playsinline=1" title="Mecca Live" frameBorder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen style={{border:"none"}}/></div>
+              <a href="https://www.youtube.com/watch?v=gvhVbNlqMOc" target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"10px 16px",fontSize:11,color:C.gold,textDecoration:"none",borderTop:`1px solid ${C.border}`,textAlign:"center"}}>▶ Открыть на YouTube</a>
             </Card>
             <Card style={{padding:0,overflow:"hidden",marginBottom:14,borderRadius:16}}>
               <Label style={{padding:"14px 16px 6px"}}>🕌 МАСДЖИД АН-НАБАВИ • Медина</Label>
-              <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube.com/embed/LWo3kp7svFQ?autoplay=0" title="Medina" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div>
+              <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube-nocookie.com/embed/LWo3kp7svFQ?rel=0&modestbranding=1&playsinline=1" title="Medina Live" frameBorder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen style={{border:"none"}}/></div>
+              <a href="https://www.youtube.com/watch?v=LWo3kp7svFQ" target="_blank" rel="noopener noreferrer" style={{display:"block",padding:"10px 16px",fontSize:11,color:C.gold,textDecoration:"none",borderTop:`1px solid ${C.border}`,textAlign:"center"}}>▶ Открыть на YouTube</a>
             </Card>
             <Card style={{background:C.goldDim,padding:16,borderRadius:16}}>
               <div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>
