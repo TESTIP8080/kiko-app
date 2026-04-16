@@ -1,4 +1,4 @@
-const CACHE = 'mizan-v14';
+const CACHE = 'mizan-v15';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {

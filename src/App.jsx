@@ -1,8 +1,12 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const MECCA = { lat: 21.4225, lng: 39.8262 };
 const DEFAULT_LOC = { lat: 42.85, lng: 74.53, name: "Кант, Кыргызстан" };
 const toRad = d => d * Math.PI / 180, toDeg = r => r * 180 / Math.PI;
+
+// Плейсхолдер на случай если картинка не загрузилась
+const IMG_PLACEHOLDER = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="#0a1510"/><circle cx="200" cy="130" r="48" fill="none" stroke="#D4AF37" stroke-width="2" opacity="0.5"/><path d="M200 90 L200 110" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" opacity="0.7"/><polygon points="200,95 196,105 204,105" fill="#D4AF37" opacity="0.7"/><circle cx="200" cy="130" r="4" fill="#D4AF37"/><text x="200" y="220" text-anchor="middle" fill="#7BA393" font-family="system-ui" font-size="12">Mizan</text></svg>');
+const imgErr = (e)=>{if(e.currentTarget.src!==IMG_PLACEHOLDER)e.currentTarget.src=IMG_PLACEHOLDER;};
 
 const C = {
   bg:"#040D08",card:"rgba(8,30,20,0.85)",gold:"#D4AF37",goldLight:"#F0D78C",goldDim:"rgba(212,175,55,0.12)",
@@ -81,15 +85,15 @@ const HOLIDAYS=[
 
 // ── Data ──
 const SITES=[
-  {id:1,n:"Масджид аль-Харам",ar:"المسجد الحرام",city:"Мекка",co:"С. Аравия",lat:21.42,lng:39.83,rank:1,d:"Самая священная мечеть ислама, вмещает до 4 миллионов молящихся. Внутри находится Кааба — чёрный куб, в сторону которого молятся 2 миллиарда мусульман. Здесь же Чёрный камень (аль-Хаджар аль-Асвад), источник Замзам и холмы Сафа и Марва — места обрядов хаджа и умры.",f:["Кааба","Чёрный камень","Замзам","Сафа и Марва","Макам Ибрахима"],yt:"gvhVbNlqMOc",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg/1280px-Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg"},
-  {id:2,n:"Масджид ан-Набави",ar:"المسجد النبوي",city:"Медина",co:"С. Аравия",lat:24.47,lng:39.61,rank:2,d:"Вторая священная мечеть, построенная самим Пророком Мухаммадом ﷺ в 622 году. Под Зелёным куполом находится могила Пророка ﷺ. Рауда (сад между минбаром и могилой) — «сад из садов Рая». Молитва здесь равна 1000 молитвам в обычной мечети.",f:["Зелёный купол","Рауда","Минбар","Могила Пророка ﷺ"],yt:"LWo3kp7svFQ",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/المسجد_النبوي_-_panoramio.jpg/1280px-المسجد_النبوي_-_panoramio.jpg"},
-  {id:3,n:"Масджид аль-Акса",ar:"المسجد الأقصى",city:"Иерусалим",co:"Палестина",lat:31.78,lng:35.24,rank:3,d:"Третья священная мечеть ислама. Первоначальная кибла (направление молитвы) до смены на Каабу. Место Исра — ночного путешествия Пророка ﷺ из Мекки, и Мирадж — вознесения на небеса, где была предписана пятикратная молитва. Молитва здесь равна 500 молитвам.",f:["Купол Скалы","Первая кибла","Мирадж","Бурак"],yt:"_GtM-JDu1Q0",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Jerusalem-2013%282%29-Aerial-Temple_Mount-%28south_exposure%29.jpg/1280px-Jerusalem-2013%282%29-Aerial-Temple_Mount-%28south_exposure%29.jpg"},
-  {id:4,n:"Джабаль ан-Нур",ar:"جبل النور",city:"Мекка",co:"С. Аравия",lat:21.46,lng:39.86,rank:4,d:"Гора Света (Джабаль ан-Нур) высотой 642 м. На вершине — пещера Хира, где Пророку Мухаммаду ﷺ в возрасте 40 лет ангел Джибриль передал первые слова Корана: «Читай!» (Икра'). Это событие положило начало пророческой миссии и ниспосланию Корана.",f:["Пещера Хира","Первое откровение","642 м"],yt:"mR3bLK0KUOY",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Jabal_al-Nour.jpg/800px-Jabal_al-Nour.jpg"},
-  {id:5,n:"Гора Арафат",ar:"جبل عرفات",city:"Арафат",co:"С. Аравия",lat:21.35,lng:39.98,rank:5,d:"День Арафа (9-й день Зуль-Хиджа) — главный день хаджа. Миллионы паломников стоят здесь с полудня до заката, обращаясь к Аллаху с мольбами. Здесь Пророк ﷺ произнёс Прощальную проповедь (632 г.), утвердив равенство людей и завершение религии ислам.",f:["День Арафа","Хадж","Прощальная проповедь"],yt:"qS66m-gMHWk",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Plain_of_Arafat.jpg/1280px-Plain_of_Arafat.jpg"},
-  {id:6,n:"Мечеть Куба",ar:"مسجد قباء",city:"Медина",co:"С. Аравия",lat:24.44,lng:39.62,rank:6,d:"Первая мечеть в истории ислама, заложенная Пророком ﷺ при прибытии в Медину (622 г.). Пророк ﷺ сказал: «Кто совершит омовение дома, а затем придёт в мечеть Куба и совершит в нёй молитву — получит награду, подобную умре.» Сегодня полностью перестроена.",yt:"SZ-cUzpqJTk",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Masjid_Quba.jpg/1280px-Masjid_Quba.jpg"},
-  {id:7,n:"Голубая мечеть",ar:"مسجد السلطان أحمد",city:"Стамбул",co:"Турция",lat:41.01,lng:28.98,d:"Шедевр османской архитектуры (1609–1616), единственная в мире мечеть с 6 минаретами. Получила название благодаря 20 000+ голубых изникских плиток внутри. 260 окон с витражами наполняют зал мягким светом. Вмещает 10 000 молящихся.",f:["6 минаретов","20000+ плиток","Изник","1616 г."],yt:"oGhAcuZMVm0",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Blue_Mosque_Istanbul_2023_%28cropped%29.jpg/1280px-Blue_Mosque_Istanbul_2023_%28cropped%29.jpg"},
-  {id:8,n:"Аль-Азхар",ar:"الأزهر",city:"Каир",co:"Египет",lat:30.05,lng:31.26,d:"Древнейшая мечеть-университет мира (основан в 970 г. н.э., более 1050 лет). Один из важнейших центров исламского образования. Университет Аль-Азхар считается авторитетнейшим учебным заведением суннитского ислама.",f:["970 г.","Старейший университет","Суннитский авторитет"],yt:"ceFhEjGP0yA",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Cairo_-_Islamic_district_-_Al_Azhar_Mosque_and_University.JPG/1280px-Cairo_-_Islamic_district_-_Al_Azhar_Mosque_and_University.JPG"},
-  {id:9,n:"Мескита (Кордова)",ar:"مسجد قرطبة",city:"Кордова",co:"Испания",lat:37.88,lng:-4.78,d:"Великая мечеть Кордовы (785 г.) — жемчужина мавританской архитектуры Андалусии. 856 колонн с красно-белыми подковообразными арками создают «каменный лес». Памятник золотого века ислама в Европе, объект ЮНЕСКО.",f:["856 колонн","Андалусия","785 г.","ЮНЕСКО"],yt:"rqD7u2h-Ndc",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Mosque_of_Cordoba_Spain.jpg/1280px-Mosque_of_Cordoba_Spain.jpg"},
+  {id:1,n:"Масджид аль-Харам",ar:"المسجد الحرام",city:"Мекка",co:"С. Аравия",lat:21.42,lng:39.83,rank:1,d:"Самая священная мечеть ислама, вмещает до 4 миллионов молящихся. Внутри находится Кааба — чёрный куб, в сторону которого молятся 2 миллиарда мусульман. Здесь же Чёрный камень (аль-Хаджар аль-Асвад), источник Замзам и холмы Сафа и Марва — места обрядов хаджа и умры.",f:["Кааба","Чёрный камень","Замзам","Сафа и Марва","Макам Ибрахима"],yt:"gvhVbNlqMOc"},
+  {id:2,n:"Масджид ан-Набави",ar:"المسجد النبوي",city:"Медина",co:"С. Аравия",lat:24.47,lng:39.61,rank:2,d:"Вторая священная мечеть, построенная самим Пророком Мухаммадом ﷺ в 622 году. Под Зелёным куполом находится могила Пророка ﷺ. Рауда (сад между минбаром и могилой) — «сад из садов Рая». Молитва здесь равна 1000 молитвам в обычной мечети.",f:["Зелёный купол","Рауда","Минбар","Могила Пророка ﷺ"],yt:"LWo3kp7svFQ"},
+  {id:3,n:"Масджид аль-Акса",ar:"المسجد الأقصى",city:"Иерусалим",co:"Палестина",lat:31.78,lng:35.24,rank:3,d:"Третья священная мечеть ислама. Первоначальная кибла (направление молитвы) до смены на Каабу. Место Исра — ночного путешествия Пророка ﷺ из Мекки, и Мирадж — вознесения на небеса, где была предписана пятикратная молитва. Молитва здесь равна 500 молитвам.",f:["Купол Скалы","Первая кибла","Мирадж","Бурак"],yt:"_GtM-JDu1Q0"},
+  {id:4,n:"Джабаль ан-Нур",ar:"جبل النور",city:"Мекка",co:"С. Аравия",lat:21.46,lng:39.86,rank:4,d:"Гора Света (Джабаль ан-Нур) высотой 642 м. На вершине — пещера Хира, где Пророку Мухаммаду ﷺ в возрасте 40 лет ангел Джибриль передал первые слова Корана: «Читай!» (Икра'). Это событие положило начало пророческой миссии и ниспосланию Корана.",f:["Пещера Хира","Первое откровение","642 м"],yt:"mR3bLK0KUOY"},
+  {id:5,n:"Гора Арафат",ar:"جبل عرفات",city:"Арафат",co:"С. Аравия",lat:21.35,lng:39.98,rank:5,d:"День Арафа (9-й день Зуль-Хиджа) — главный день хаджа. Миллионы паломников стоят здесь с полудня до заката, обращаясь к Аллаху с мольбами. Здесь Пророк ﷺ произнёс Прощальную проповедь (632 г.), утвердив равенство людей и завершение религии ислам.",f:["День Арафа","Хадж","Прощальная проповедь"],yt:"qS66m-gMHWk"},
+  {id:6,n:"Мечеть Куба",ar:"مسجد قباء",city:"Медина",co:"С. Аравия",lat:24.44,lng:39.62,rank:6,d:"Первая мечеть в истории ислама, заложенная Пророком ﷺ при прибытии в Медину (622 г.). Пророк ﷺ сказал: «Кто совершит омовение дома, а затем придёт в мечеть Куба и совершит в нёй молитву — получит награду, подобную умре.» Сегодня полностью перестроена.",yt:"SZ-cUzpqJTk"},
+  {id:7,n:"Голубая мечеть",ar:"مسجد السلطان أحمد",city:"Стамбул",co:"Турция",lat:41.01,lng:28.98,d:"Шедевр османской архитектуры (1609–1616), единственная в мире мечеть с 6 минаретами. Получила название благодаря 20 000+ голубых изникских плиток внутри. 260 окон с витражами наполняют зал мягким светом. Вмещает 10 000 молящихся.",f:["6 минаретов","20000+ плиток","Изник","1616 г."],yt:"oGhAcuZMVm0"},
+  {id:8,n:"Аль-Азхар",ar:"الأزهر",city:"Каир",co:"Египет",lat:30.05,lng:31.26,d:"Древнейшая мечеть-университет мира (основан в 970 г. н.э., более 1050 лет). Один из важнейших центров исламского образования. Университет Аль-Азхар считается авторитетнейшим учебным заведением суннитского ислама.",f:["970 г.","Старейший университет","Суннитский авторитет"],yt:"ceFhEjGP0yA"},
+  {id:9,n:"Мескита (Кордова)",ar:"مسجد قرطبة",city:"Кордова",co:"Испания",lat:37.88,lng:-4.78,d:"Великая мечеть Кордовы (785 г.) — жемчужина мавританской архитектуры Андалусии. 856 колонн с красно-белыми подковообразными арками создают «каменный лес». Памятник золотого века ислама в Европе, объект ЮНЕСКО.",f:["856 колонн","Андалусия","785 г.","ЮНЕСКО"],yt:"rqD7u2h-Ndc"},
 ];
 
 const STORIES=[
@@ -322,7 +326,7 @@ const Label=({children,style})=><div style={{fontSize:10,color:C.gold,fontWeight
 const Badge=({children,color=C.gold,small})=><span style={{padding:small?"2px 8px":"4px 12px",borderRadius:20,background:`${color}15`,color,fontSize:small?9:10,fontWeight:700,whiteSpace:"nowrap",border:`1px solid ${color}30`}}>{children}</span>;
 const Dot=({live})=><span style={{width:7,height:7,borderRadius:"50%",background:live?C.red:C.green,display:"inline-block",marginRight:4,animation:live?"pulse 1.5s infinite":"none",boxShadow:live?`0 0 8px ${C.red}`:"none"}}/>;
 const PBar=({v,m,color=C.gold})=><div style={{height:3,borderRadius:2,background:"rgba(255,255,255,.06)",width:"100%",marginTop:5}}><div style={{height:"100%",borderRadius:2,background:`linear-gradient(90deg,${color},${color}90)`,width:`${Math.min(100,v/m*100)}%`,transition:"width .5s"}}/></div>;
-const ImgCard=({src,alt,h=200,children,style,onClick})=><div onClick={onClick} style={{borderRadius:16,overflow:"hidden",position:"relative",cursor:onClick?"pointer":"default",transition:"all .3s",border:`1px solid ${C.border}`,boxShadow:"0 4px 24px rgba(0,0,0,.4)",...style}} onMouseEnter={onClick?e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 40px rgba(45,212,191,.2)";}:undefined} onMouseLeave={onClick?e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,.4)";}:undefined}><img src={src} alt={alt} loading="lazy" style={{width:"100%",height:h,objectFit:"cover",display:"block"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(4,13,8,.95))",padding:"40px 16px 14px"}}>{children}</div></div>;
+const ImgCard=({src,alt,h=200,children,style,onClick})=><div onClick={onClick} style={{borderRadius:16,overflow:"hidden",position:"relative",cursor:onClick?"pointer":"default",transition:"all .3s",border:`1px solid ${C.border}`,boxShadow:"0 4px 24px rgba(0,0,0,.4)",...style}} onMouseEnter={onClick?e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 40px rgba(45,212,191,.2)";}:undefined} onMouseLeave={onClick?e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 24px rgba(0,0,0,.4)";}:undefined}><img src={src} alt={alt} loading="lazy" onError={imgErr} style={{width:"100%",height:h,objectFit:"cover",display:"block"}}/><div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(4,13,8,.95))",padding:"40px 16px 14px"}}>{children}</div></div>;
 
 // ── useMediaQuery ──
 function useIsMobile(){
@@ -364,6 +368,7 @@ function useCompass(){
   const[heading,setHeading]=useState(null);
   const[supported,setSupported]=useState(false);
   const[permissionNeeded,setPermissionNeeded]=useState(false);
+  const[permissionDenied,setPermissionDenied]=useState(false);
   const cleanupRef=useRef(null);
 
   const startListening=useCallback(()=>{
@@ -382,8 +387,9 @@ function useCompass(){
     if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
       try{
         const p=await DeviceOrientationEvent.requestPermission();
-        if(p==='granted')startListening();
-      }catch{}
+        if(p==='granted'){setPermissionNeeded(false);setPermissionDenied(false);startListening();}
+        else{setPermissionDenied(true);}
+      }catch{setPermissionDenied(true);}
     }
   },[startListening]);
 
@@ -397,7 +403,7 @@ function useCompass(){
     return()=>{if(cleanupRef.current){cleanupRef.current();cleanupRef.current=null;}};
   },[startListening]);
 
-  return{heading,supported,permissionNeeded,requestPermission};
+  return{heading,supported,permissionNeeded,permissionDenied,requestPermission};
 }
 
 // ── Main ──
@@ -422,15 +428,20 @@ export default function KikoFull(){
   const[selProduct,setSelProduct]=useState(null);
   const[cart,setCart]=useState(()=>{try{return JSON.parse(localStorage.getItem("kiko_cart"))||[];}catch{return[];}});
   const addToCart=(item)=>{setCart(prev=>{const n=[...prev,item];try{localStorage.setItem("kiko_cart",JSON.stringify(n));}catch{}return n;});};
-  const removeFromCart=(id)=>{setCart(prev=>{const n=prev.filter((_,i)=>i!==id);try{localStorage.setItem("kiko_cart",JSON.stringify(n));}catch{}return n;});};
+  const removeFromCartByIndex=(idx)=>{setCart(prev=>{const n=prev.filter((_,i)=>i!==idx);try{localStorage.setItem("kiko_cart",JSON.stringify(n));}catch{}return n;});};
   const cartTotal=cart.reduce((s,it)=>s+parseInt(it.price.replace(/\D/g,"")),0);
   const[showCart,setShowCart]=useState(false);
+  const[showCheckout,setShowCheckout]=useState(false);
+  const[checkoutForm,setCheckoutForm]=useState({name:"",phone:"",address:""});
   // Chat
-  const[chatMsgs,setChatMsgs]=useState([]);
+  const[chatMsgs,setChatMsgs]=useState(()=>{try{return JSON.parse(localStorage.getItem("kiko_chat"))||[];}catch{return[];}});
   const[chatIn,setChatIn]=useState("");
   const[chatLoad,setChatLoad]=useState(false);
   const chatRef=useRef(null);
+  useEffect(()=>{try{localStorage.setItem("kiko_chat",JSON.stringify(chatMsgs.slice(-50)));}catch{}},[chatMsgs]);
   // Ummah
+  const[rooms,setRooms]=useState(()=>{try{const s=JSON.parse(localStorage.getItem("kiko_rooms"));return Array.isArray(s)?[...ROOMS,...s]:ROOMS;}catch{return ROOMS;}});
+  const saveUserRooms=(userRooms)=>{try{localStorage.setItem("kiko_rooms",JSON.stringify(userRooms));}catch{}};
   const[roomFilter,setRoomFilter]=useState("all");
   const[roomLang,setRoomLang]=useState("all");
   const[roomSearch,setRoomSearch]=useState("");
@@ -439,11 +450,12 @@ export default function KikoFull(){
   const[micOn,setMicOn]=useState(false);
   const[showProj,setShowProj]=useState(true);
   const[showCreate,setShowCreate]=useState(false);
-  const[newRoom,setNewRoom]=useState({name:"",type:"prayer",lang:"Русский",desc:"",max:50,proj:""});
+  const[newRoom,setNewRoom]=useState({name:"",type:"prayer",lang:"Русский",max:50,proj:""});
   // Tasbih
-  const[tasbihPreset,setTasbihPreset]=useState(0);
-  const[tasbihCount,setTasbihCount]=useState(0);
+  const[tasbihPreset,setTasbihPreset]=useState(()=>{try{return parseInt(localStorage.getItem("kiko_tasbih_preset"))||0;}catch{return 0;}});
+  const[tasbihCount,setTasbihCount]=useState(()=>{try{return parseInt(localStorage.getItem("kiko_tasbih_count"))||0;}catch{return 0;}});
   const[tasbihTotal,setTasbihTotal]=useState(()=>{try{return parseInt(localStorage.getItem("kiko_tasbih_total"))||0;}catch{return 0;}});
+  useEffect(()=>{try{localStorage.setItem("kiko_tasbih_preset",String(tasbihPreset));localStorage.setItem("kiko_tasbih_count",String(tasbihCount));}catch{}},[tasbihPreset,tasbihCount]);
   // Prayer tracker — 3 состояния: 'ontime' | 'late' | 'missed'
   const todayKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
   const[prayerLog,setPrayerLog]=useState(()=>{try{return JSON.parse(localStorage.getItem("kiko_prayer_log"))||{};}catch{return{};}});
@@ -537,11 +549,20 @@ export default function KikoFull(){
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({message:m,history:chatMsgs.slice(-10)})
       });
-      const data=await res.json();
-      if(data.error){
-        setChatMsgs(p=>[...p,{r:"a",t:"⚠️ "+data.error,agent:"Система",icon:"⚙️"}]);
+      if(!res.ok){
+        setChatMsgs(p=>[...p,{r:"a",t:`⚠️ Ошибка сервера (${res.status}). Попробуйте позже.`,agent:"Система",icon:"⚙️"}]);
       }else{
-        setChatMsgs(p=>[...p,{r:"a",t:data.text,agent:data.agent,icon:data.icon}]);
+        let data;
+        try{data=await res.json();}catch{data=null;}
+        if(!data||typeof data!=="object"){
+          setChatMsgs(p=>[...p,{r:"a",t:"⚠️ Некорректный ответ от сервера.",agent:"Система",icon:"⚙️"}]);
+        }else if(data.error){
+          setChatMsgs(p=>[...p,{r:"a",t:"⚠️ "+data.error,agent:"Система",icon:"⚙️"}]);
+        }else if(typeof data.text==="string"&&data.text.trim()){
+          setChatMsgs(p=>[...p,{r:"a",t:data.text,agent:data.agent||"AI",icon:data.icon||"🤖"}]);
+        }else{
+          setChatMsgs(p=>[...p,{r:"a",t:"⚠️ Пустой ответ от AI. Попробуйте переформулировать.",agent:"Система",icon:"⚙️"}]);
+        }
       }
     }catch(e){
       setChatMsgs(p=>[...p,{r:"a",t:"Нет связи с сервером. Проверьте интернет.",agent:"Система",icon:"⚙️"}]);
@@ -550,7 +571,7 @@ export default function KikoFull(){
   },[chatIn,chatLoad,chatMsgs]);
 
   const ti=type=>RT.find(t=>t.id===type)||RT[0];
-  const filteredRooms=ROOMS.filter(r=>{
+  const filteredRooms=rooms.filter(r=>{
     if(roomFilter!=="all"&&r.type!==roomFilter)return false;
     if(roomLang!=="all"&&r.lang!==roomLang)return false;
     if(roomSearch&&!r.name.toLowerCase().includes(roomSearch.toLowerCase()))return false;
@@ -569,8 +590,8 @@ export default function KikoFull(){
   ];
   // Mobile bottom tabs
   const mobileTabs=[
-    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"quran",icon:"📖",l:"Коран"},
-    {id:"tasbih",icon:"📿",l:"Тасбих"},{id:"chat",icon:"💬",l:"AI"},
+    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"calendar",icon:"📅",l:"Календарь"},
+    {id:"quran",icon:"📖",l:"Коран"},{id:"chat",icon:"💬",l:"AI"},
   ];
   const[showMore,setShowMore]=useState(false);
   const moreTabs=tabs.filter(t=>!mobileTabs.find(mt=>mt.id===t.id));
@@ -612,7 +633,7 @@ export default function KikoFull(){
             {geoLoading&&<div style={{fontSize:11,color:C.muted,marginBottom:8,textAlign:"center"}}>📍 Определяем местоположение...</div>}
             {/* Hero prayer card — lightweight */}
             <div style={{borderRadius:16,overflow:"hidden",marginBottom:14,position:"relative"}}>
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg/1280px-Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg" alt="Мекка" style={{width:"100%",height:isMobile?180:220,objectFit:"cover",display:"block",filter:"brightness(.35)"}} loading="lazy"/>
+              <img src="https://img.youtube.com/vi/gvhVbNlqMOc/hqdefault.jpg" alt="Мекка" style={{width:"100%",height:isMobile?180:220,objectFit:"cover",display:"block",filter:"brightness(.35)"}} loading="lazy" onError={imgErr}/>
               <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,transparent 0%,rgba(4,13,8,.85) 65%,rgba(4,13,8,.98) 100%)",padding:isMobile?"14px":"20px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
                 <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{loc.name} • {hijri.day} {hijri.monthName}</div>
                 <div style={{fontSize:isMobile?22:28,fontWeight:600,color:C.gold,lineHeight:1.2}}>{np.icon} {np.name} <span style={{fontWeight:200,fontSize:isMobile?16:20,color:C.cream}}>{np.time}</span></div>
@@ -866,6 +887,7 @@ export default function KikoFull(){
               </Card>
 
               <div style={{fontSize:10,color:C.gold,letterSpacing:2,marginBottom:8,marginTop:4}}>БЛИЖАЙШИЕ ПРАЗДНИКИ</div>
+              {upcoming.length===0&&<Card style={{padding:24,textAlign:"center"}}><div style={{fontSize:32,marginBottom:8}}>📅</div><div style={{fontSize:13,color:C.muted}}>Нет данных о ближайших праздниках</div></Card>}
               {upcoming.map((h,i)=>{
                 const gr=h.date.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"});
                 const dl=h.daysLeft;
@@ -1003,7 +1025,8 @@ export default function KikoFull(){
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold}}>Направление Киблы</h2>
             <p style={{color:C.muted,fontSize:11,marginBottom:6}}>{loc.name} → Кааба</p>
             {compass.supported&&<div style={{fontSize:10,color:C.green,marginBottom:14}}>● Компас активен — поворачивайте телефон</div>}
-            {!compass.supported&&compass.permissionNeeded&&<button onClick={compass.requestPermission} style={{background:C.gold,border:"none",borderRadius:8,padding:"8px 16px",color:C.bg,fontSize:11,fontWeight:600,cursor:"pointer",marginBottom:14}}>Включить компас</button>}
+            {!compass.supported&&compass.permissionNeeded&&!compass.permissionDenied&&<button onClick={compass.requestPermission} style={{background:C.gold,border:"none",borderRadius:8,padding:"8px 16px",color:C.bg,fontSize:11,fontWeight:600,cursor:"pointer",marginBottom:14}}>Включить компас</button>}
+            {compass.permissionDenied&&<div style={{fontSize:10,color:C.red,marginBottom:6,padding:"8px 12px",background:`${C.red}12`,borderRadius:8,border:`1px solid ${C.red}30`}}>⚠️ Доступ к компасу запрещён. Разрешите в настройках браузера: Safari → Настройки → Движение и ориентация.</div>}
             {!compass.supported&&!compass.permissionNeeded&&<div style={{fontSize:10,color:C.muted,marginBottom:14}}>Компас недоступен — показан расчётный угол</div>}
             <Card style={{marginBottom:16,textAlign:"left",background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Кибла — направление на Каабу в Мекке. Мусульмане поворачиваются туда при молитве. {compass.supported?"Поворачивайте телефон до тех пор, пока стрелка не укажет вверх.":"Откройте на телефоне для живого компаса."}</div></Card>
             <svg viewBox="0 0 200 200" width={isMobile?Math.min(280,window.innerWidth-60):200} height={isMobile?Math.min(280,window.innerWidth-60):200} style={{margin:"0 auto",display:"block",transition:"transform .3s",transform:compass.supported?`rotate(${-(compass.heading||0)}deg)`:"none"}}>
@@ -1079,7 +1102,7 @@ export default function KikoFull(){
             {/* Rest as list with thumbnails */}
             {SITES.filter(s=>!s.rank||s.rank>3).map(s=>(
               <Card key={s.id} onClick={()=>setSelSite(s)} style={{padding:0,marginBottom:8,display:"flex",overflow:"hidden"}}>
-                <img src={s.img||`https://img.youtube.com/vi/${s.yt}/default.jpg`} alt={s.n} loading="lazy" style={{width:90,height:70,objectFit:"cover",flexShrink:0}}/>
+                <img src={s.img||`https://img.youtube.com/vi/${s.yt}/default.jpg`} alt={s.n} loading="lazy" onError={imgErr} style={{width:90,height:70,objectFit:"cover",flexShrink:0}}/>
                 <div style={{padding:"10px 14px",flex:1,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div><div style={{fontSize:13,fontWeight:600,color:C.cream}}>{s.n}</div><div style={{fontSize:10,color:C.muted}}>{s.ar} • {s.city}, {s.co}</div></div>
                   <span style={{color:C.gold,fontSize:16}}>→</span>
@@ -1091,7 +1114,7 @@ export default function KikoFull(){
             <button onClick={()=>setSelSite(null)} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Все святыни</button>
             {/* Hero image */}
             <div style={{borderRadius:16,overflow:"hidden",marginBottom:16,position:"relative",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
-              <img src={selSite.img||`https://img.youtube.com/vi/${selSite.yt}/hqdefault.jpg`} alt={selSite.n} style={{width:"100%",height:isMobile?220:300,objectFit:"cover",display:"block"}} loading="lazy"/>
+              <img src={selSite.img||`https://img.youtube.com/vi/${selSite.yt}/hqdefault.jpg`} alt={selSite.n} style={{width:"100%",height:isMobile?220:300,objectFit:"cover",display:"block"}} loading="lazy" onError={imgErr}/>
               <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(4,13,8,.95))",padding:"50px 20px 16px"}}>
                 <h2 style={{fontSize:22,fontWeight:700,color:C.cream,margin:0}}>{selSite.n}</h2>
                 <div style={{fontSize:14,color:C.goldLight}}>{selSite.ar}</div>
@@ -1238,7 +1261,7 @@ export default function KikoFull(){
                 return(
                 <div key={it.id} onClick={()=>setSelProduct(it)} style={{borderRadius:14,overflow:"hidden",background:C.card,border:`1px solid ${C.border}`,cursor:"pointer",transition:"all .25s ease",display:"flex",flexDirection:"column"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=C.gold+"60";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform="none";}}>
                   <div style={{position:"relative",background:"#0a1510"}}>
-                    <img src={it.img} alt={it.n} loading="lazy" style={{width:"100%",height:isMobile?130:150,objectFit:"cover",display:"block"}}/>
+                    <img src={it.img} alt={it.n} loading="lazy" onError={imgErr} style={{width:"100%",height:isMobile?130:150,objectFit:"cover",display:"block"}}/>
                     {it.badge&&<span style={{position:"absolute",top:8,left:8,padding:"3px 8px",borderRadius:6,background:it.badgeColor||C.gold,color:"#040D08",fontSize:9,fontWeight:700,letterSpacing:.3}}>{it.badge}</span>}
                     {inCart&&<span style={{position:"absolute",top:8,right:8,width:22,height:22,borderRadius:"50%",background:C.green,color:"#040D08",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span>}
                   </div>
@@ -1263,7 +1286,7 @@ export default function KikoFull(){
           {tab==="shop"&&selProduct&&!showCart&&<>
             <button onClick={()=>setSelProduct(null)} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Все товары</button>
             <div style={{borderRadius:16,overflow:"hidden",marginBottom:16,boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
-              <img src={selProduct.img} alt={selProduct.n} style={{width:"100%",height:isMobile?250:320,objectFit:"cover",display:"block"}} loading="lazy"/>
+              <img src={selProduct.img} alt={selProduct.n} style={{width:"100%",height:isMobile?250:320,objectFit:"cover",display:"block"}} loading="lazy" onError={imgErr}/>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
               <h2 style={{fontSize:20,fontWeight:600,color:C.cream,flex:1}}>{selProduct.n}</h2>
@@ -1291,12 +1314,12 @@ export default function KikoFull(){
             {cart.length===0&&<Card style={{padding:30,textAlign:"center"}}><div style={{fontSize:40,marginBottom:10}}>🛒</div><div style={{fontSize:14,color:C.muted}}>Корзина пуста</div><button onClick={()=>setShowCart(false)} style={{marginTop:12,padding:"10px 24px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:12,fontWeight:700,cursor:"pointer"}}>За покупками →</button></Card>}
             {cart.map((it,i)=>(
               <div key={i} style={{display:"flex",gap:12,background:C.card,borderRadius:10,border:`1px solid ${C.border}`,padding:10,marginBottom:6,alignItems:"center"}}>
-                <img src={it.img} alt={it.n} style={{width:56,height:56,borderRadius:8,objectFit:"cover",flexShrink:0}} loading="lazy"/>
+                <img src={it.img} alt={it.n} style={{width:56,height:56,borderRadius:8,objectFit:"cover",flexShrink:0}} loading="lazy" onError={imgErr}/>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:12,fontWeight:600,color:C.cream,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.n}</div>
                   <div style={{fontSize:13,fontWeight:700,color:C.gold,marginTop:2}}>{it.price}</div>
                 </div>
-                <button onClick={()=>removeFromCart(i)} style={{background:"none",border:"none",color:C.red,fontSize:16,cursor:"pointer",padding:4}}>✕</button>
+                <button onClick={()=>removeFromCartByIndex(i)} style={{background:"none",border:"none",color:C.red,fontSize:16,cursor:"pointer",padding:4}}>✕</button>
               </div>
             ))}
             {cart.length>0&&<>
@@ -1306,7 +1329,7 @@ export default function KikoFull(){
                   <div style={{fontSize:22,fontWeight:600,color:C.gold}}>{cartTotal.toLocaleString()} сом</div>
                 </div>
               </Card>
-              <button onClick={()=>{alert(`Заказ оформлен!\n\nТоваров: ${cart.length}\nСумма: ${cartTotal.toLocaleString()} сом\n\nС вами свяжутся для уточнения доставки.`);setCart([]);try{localStorage.setItem("kiko_cart","[]");}catch{}setShowCart(false);}} style={{width:"100%",marginTop:10,padding:"14px",background:C.gold,border:"none",borderRadius:12,color:C.bg,fontSize:15,fontWeight:700,cursor:"pointer"}}>Оформить заказ →</button>
+              <button onClick={()=>setShowCheckout(true)} style={{width:"100%",marginTop:10,padding:"14px",background:C.gold,border:"none",borderRadius:12,color:C.bg,fontSize:15,fontWeight:700,cursor:"pointer"}}>Оформить заказ →</button>
               <div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:8}}>Демо-режим. Реальная оплата не производится.</div>
             </>}
           </>}
@@ -1314,7 +1337,7 @@ export default function KikoFull(){
           {/* ═══ UMMAH ROOMS ═══ */}
           {tab==="ummah"&&!selRoom&&<>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div><h2 style={{fontSize:18,fontWeight:300,color:C.gold}}>Умма — Комнаты</h2><div style={{fontSize:10,color:C.green}}><Dot/>{ROOMS.reduce((s,r)=>s+r.users,0).toLocaleString()} онлайн • {ROOMS.filter(r=>r.live).length} комнат</div></div>
+              <div><h2 style={{fontSize:18,fontWeight:300,color:C.gold}}>Умма — Комнаты</h2><div style={{fontSize:10,color:C.green}}><Dot/>{rooms.reduce((s,r)=>s+r.users,0).toLocaleString()} онлайн • {rooms.filter(r=>r.live).length} комнат</div></div>
               <button onClick={()=>setShowCreate(true)} style={{background:C.gold,border:"none",borderRadius:8,padding:"7px 14px",color:C.bg,fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Создать</button>
             </div>
             <input value={roomSearch} onChange={e=>setRoomSearch(e.target.value)} placeholder="Поиск комнат..." style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 14px",color:C.cream,fontSize:12,outline:"none",marginBottom:8}}/>
@@ -1331,7 +1354,7 @@ export default function KikoFull(){
             {roomFilter==="all"&&roomLang==="all"&&!roomSearch&&<div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:C.red,fontWeight:600,marginBottom:8}}><Dot live/>СЕЙЧАС В ЭФИРЕ</div>
               <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:6}}>
-                {ROOMS.filter(r=>r.live).slice(0,4).map(r=>{const t=ti(r.type);return(
+                {rooms.filter(r=>r.live).slice(0,4).map(r=>{const t=ti(r.type);return(
                   <div key={r.id} onClick={()=>setSelRoom(r)} style={{minWidth:200,background:C.card,borderRadius:10,border:`1px solid ${C.border}`,padding:12,cursor:"pointer",flexShrink:0}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><Badge color={t.c} small>{t.icon} {t.l}</Badge><span style={{fontSize:9,color:C.green}}><Dot/>{r.users}</span></div>
                     <div style={{fontSize:12,fontWeight:600,color:C.cream,marginBottom:3,lineHeight:1.3}}>{r.name}</div>
@@ -1370,7 +1393,7 @@ export default function KikoFull(){
               <div style={{display:"flex",gap:6}}>{selRoom.live&&<Badge color={C.red}><Dot live/>LIVE</Badge>}<Badge color={ti(selRoom.type).c}>{ti(selRoom.type).icon} {ti(selRoom.type).l}</Badge></div>
             </div>
 
-            {selRoom.proj&&<Card style={{padding:0,overflow:"hidden",marginBottom:12}}>
+            {selRoom.proj&&showProj&&<Card style={{padding:0,overflow:"hidden",marginBottom:12}}>
               {selRoom.proj==="Мекка Live"||selRoom.proj==="Аль-Азхар Live"?
                 <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${selRoom.proj==="Аль-Азхар Live"?"ceFhEjGP0yA":"gvhVbNlqMOc"}?autoplay=0`} title="Stream" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div>:
                 <div style={{aspectRatio:"16/9",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(180deg,rgba(45,212,191,.05),rgba(4,13,8,.9))"}}>
@@ -1412,8 +1435,38 @@ export default function KikoFull(){
               <div style={{display:"flex",gap:4,marginBottom:12,flexWrap:"wrap"}}>{["Мекка Live","Текст Корана","Тасбих-счётчик","Без проекции"].map(p=><button key={p} onClick={()=>setNewRoom(pr=>({...pr,proj:p}))} style={{background:newRoom.proj===p?C.goldDim:C.card,border:`1px solid ${newRoom.proj===p?C.gold:C.border}`,borderRadius:8,padding:"4px 10px",color:newRoom.proj===p?C.gold:C.muted,fontSize:10,cursor:"pointer"}}>{p}</button>)}</div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
                 <button onClick={()=>setShowCreate(false)} style={{flex:1,padding:"10px",background:C.card,border:`1px solid ${C.border}`,borderRadius:10,color:C.muted,fontSize:12,cursor:"pointer"}}>Отмена</button>
-                <button onClick={()=>{setShowCreate(false);setSelRoom({...newRoom,id:99,users:1,max:newRoom.max,live:true,host:"Вы",co:"🇰🇬 Кыргызстан",tags:[]});setJoined(true);}} style={{flex:2,padding:"10px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:13,fontWeight:700,cursor:"pointer"}}>🕌 Создать</button>
+                <button onClick={()=>{
+                  const room={...newRoom,id:Date.now(),users:1,max:newRoom.max,live:true,host:"Вы",co:"🇰🇬 Кыргызстан",tags:[],userCreated:true};
+                  setRooms(prev=>{const next=[...prev,room];const user=next.filter(r=>r.userCreated);saveUserRooms(user);return next;});
+                  setShowCreate(false);setSelRoom(room);setJoined(true);setNewRoom({name:"",type:"prayer",lang:"Русский",max:50,proj:""});
+                }} disabled={!newRoom.name.trim()} style={{flex:2,padding:"10px",background:newRoom.name.trim()?C.gold:C.goldDim,border:"none",borderRadius:10,color:newRoom.name.trim()?C.bg:C.muted,fontSize:13,fontWeight:700,cursor:newRoom.name.trim()?"pointer":"not-allowed"}}>🕌 Создать</button>
               </div>
+            </div>
+          </div>}
+
+          {/* Checkout Modal */}
+          {showCheckout&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowCheckout(false)}>
+            <div onClick={e=>e.stopPropagation()} style={{background:C.bg,borderRadius:14,border:`1px solid ${C.gold}40`,padding:22,maxWidth:440,width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
+              <div style={{fontSize:18,fontWeight:600,color:C.gold,marginBottom:4}}>🛒 Оформление заказа</div>
+              <div style={{fontSize:11,color:C.muted,marginBottom:16}}>Товаров: {cart.length} · Сумма: <b style={{color:C.gold}}>{cartTotal.toLocaleString()} сом</b></div>
+              <div style={{fontSize:10,color:C.muted,marginBottom:4}}>Имя</div>
+              <input value={checkoutForm.name} onChange={e=>setCheckoutForm(p=>({...p,name:e.target.value}))} placeholder="Иван Иванов" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 12px",color:C.cream,fontSize:13,outline:"none",marginBottom:12}}/>
+              <div style={{fontSize:10,color:C.muted,marginBottom:4}}>Телефон</div>
+              <input value={checkoutForm.phone} onChange={e=>setCheckoutForm(p=>({...p,phone:e.target.value}))} placeholder="+996 700 000 000" type="tel" style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 12px",color:C.cream,fontSize:13,outline:"none",marginBottom:12}}/>
+              <div style={{fontSize:10,color:C.muted,marginBottom:4}}>Адрес доставки</div>
+              <textarea value={checkoutForm.address} onChange={e=>setCheckoutForm(p=>({...p,address:e.target.value}))} placeholder="Город, улица, дом, квартира" rows={2} style={{width:"100%",background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 12px",color:C.cream,fontSize:13,outline:"none",marginBottom:16,fontFamily:"inherit",resize:"vertical"}}/>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>setShowCheckout(false)} style={{flex:1,padding:"11px",background:C.card,border:`1px solid ${C.border}`,borderRadius:10,color:C.muted,fontSize:12,cursor:"pointer"}}>Отмена</button>
+                <button disabled={!checkoutForm.name.trim()||!checkoutForm.phone.trim()||!checkoutForm.address.trim()} onClick={()=>{
+                  const valid=checkoutForm.name.trim()&&checkoutForm.phone.trim()&&checkoutForm.address.trim();
+                  if(!valid)return;
+                  const orderN="№"+Math.floor(100000+Math.random()*900000);
+                  alert(`✅ Заказ ${orderN} оформлен!\n\n${checkoutForm.name}\n${checkoutForm.phone}\n${checkoutForm.address}\n\nТоваров: ${cart.length}\nСумма: ${cartTotal.toLocaleString()} сом\n\nС вами свяжутся в течение дня.`);
+                  setCart([]);try{localStorage.setItem("kiko_cart","[]");}catch{}
+                  setShowCheckout(false);setShowCart(false);setCheckoutForm({name:"",phone:"",address:""});
+                }} style={{flex:2,padding:"11px",background:(checkoutForm.name.trim()&&checkoutForm.phone.trim()&&checkoutForm.address.trim())?C.gold:C.goldDim,border:"none",borderRadius:10,color:C.bg,fontSize:13,fontWeight:700,cursor:"pointer"}}>Подтвердить</button>
+              </div>
+              <div style={{fontSize:9,color:C.muted,textAlign:"center",marginTop:10}}>Демо-режим. Реальные данные не передаются.</div>
             </div>
           </div>}
 
