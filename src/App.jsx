@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 
 const MECCA = { lat: 21.4225, lng: 39.8262 };
 const DEFAULT_LOC = { lat: 42.85, lng: 74.53, name: "Кант, Кыргызстан" };
@@ -24,8 +24,9 @@ function calcPrayers(date,lat,lng){
   const noon=12+tz-lng/15-eqt/60, latR=toRad(lat);
   const ha=a=>{const c=(Math.sin(toRad(a))-Math.sin(latR)*Math.sin(decl))/(Math.cos(latR)*Math.cos(decl));return c>1||c<-1?0:toDeg(Math.acos(c))/15;};
   const asrA=toDeg(Math.atan(1/(1+Math.tan(toRad(Math.abs(toDeg(latR)-toDeg(decl)))))));
-  const f=h=>`${String(Math.floor(h)).padStart(2,'0')}:${String(Math.round((h-Math.floor(h))*60)).padStart(2,'0')}`;
-  const tm=h=>Math.floor(h)*60+Math.round((h-Math.floor(h))*60);
+  const norm=h=>{let m=Math.round((h-Math.floor(h))*60),H=Math.floor(h);if(m===60){m=0;H++;}H=((H%24)+24)%24;return[H,m];};
+  const f=h=>{const[H,m]=norm(h);return`${String(H).padStart(2,'0')}:${String(m).padStart(2,'0')}`;};
+  const tm=h=>{const[H,m]=norm(h);return H*60+m;};
   return[
     {name:"Фаджр",ar:"الفجر",time:f(noon-ha(-18)),min:tm(noon-ha(-18)),icon:"🌙"},
     {name:"Восход",ar:"الشروق",time:f(noon-ha(-.833)),min:tm(noon-ha(-.833)),icon:"🌅"},
@@ -36,6 +37,47 @@ function calcPrayers(date,lat,lng){
   ];
 }
 function calcQibla(lat,lng){const f1=toRad(lat),f2=toRad(MECCA.lat),dl=toRad(MECCA.lng-lng);return(toDeg(Math.atan2(Math.sin(dl),Math.cos(f1)*Math.tan(f2)-Math.sin(f1)*Math.cos(dl)))+360)%360;}
+
+// ── Hijri date (approximate) ──
+function toHijri(date){
+  const jd=Math.floor((date.getTime()/86400000)+2440587.5);
+  const l=jd-1948440+10632;
+  const n=Math.floor((l-1)/10631);
+  const l2=l-10631*n+354;
+  const j=Math.floor((10985-l2)/5316)*Math.floor((50*l2)/17719)+Math.floor(l2/5670)*Math.floor((43*l2)/15238);
+  const l3=l2-Math.floor((30-j)/15)*Math.floor((17719*j)/50)-Math.floor(j/16)*Math.floor((15238*j)/43)+29;
+  const month=Math.floor((24*l3)/709);
+  const day=l3-Math.floor((709*month)/24);
+  const year=30*n+j-30;
+  const months=["Мухаррам","Сафар","Раби аль-Авваль","Раби ас-Сани","Джумада аль-Уля","Джумада ас-Сания","Раджаб","Шаабан","Рамадан","Шавваль","Зуль-Каада","Зуль-Хиджа"];
+  return{day,month,year,monthName:months[month-1]||""};
+}
+
+// Найти следующую григорианскую дату для указанной Хиджри даты (месяц/день)
+function nextHijriDate(hMonth,hDay,fromDate=new Date()){
+  const start=new Date(fromDate);start.setHours(0,0,0,0);
+  for(let i=0;i<400;i++){
+    const d=new Date(start.getTime()+i*86400000);
+    const h=toHijri(d);
+    if(h.month===hMonth&&h.day===hDay)return{date:d,hyear:h.year,daysLeft:i};
+  }
+  return null;
+}
+
+// Исламские праздники и памятные даты (Хиджри)
+const HOLIDAYS=[
+  {m:1,d:1,n:"Исламский Новый год",ar:"رأس السنة الهجرية",icon:"🌙",clr:"#FBBF24",what:"Начало года по хиджре — переселения Пророка ﷺ из Мекки в Медину (622 г.)",how:"Размышление о хиджре, благодарность Аллаху, намерения на новый год. Поститься в Ашуру (10 Мухаррам) — сунна."},
+  {m:1,d:10,n:"День Ашура",ar:"يوم عاشوراء",icon:"🕊",clr:"#A78BFA",what:"День спасения Мусы ﷷ от Фараона. Пост в этот день стирает грехи прошедшего года.",how:"Желательно поститься 9 и 10 Мухаррама (или 10 и 11), чтобы отличиться от иудеев. Раздача милостыни, чтение Корана."},
+  {m:3,d:12,n:"Мавлид ан-Наби",ar:"المولد النبوي",icon:"🌟",clr:"#2DD4BF",what:"День рождения Пророка Мухаммада ﷺ (571 г.). Празднование — вопрос разногласий учёных.",how:"Читать сиру (жизнеописание Пророка ﷺ), посылать салаваты, изучать его нравы и сунну, следовать его примеру."},
+  {m:7,d:27,n:"Ляйлят аль-Исра ва-ль-Мирадж",ar:"ليلة الإسراء والمعراج",icon:"✨",clr:"#D4AF37",what:"Ночь вознесения Пророка ﷺ в Иерусалим и к семи небесам, где была предписана пятикратная молитва.",how:"Размышление о значении намаза, чтение суры «Аль-Исра», ночное поклонение, благодарность за 5 намазов."},
+  {m:8,d:15,n:"Ляйлят аль-Бараа",ar:"ليلة البراءة",icon:"🌕",clr:"#D4AF37",what:"Ночь середины Шаабана — ночь предопределения судеб на следующий год.",how:"Ночной намаз, дуа, покаяние. Пост в день 15 Шаабана (иногда весь Шаабан — сунна Пророка ﷺ)."},
+  {m:9,d:1,n:"Начало Рамадана",ar:"بداية رمضان",icon:"🌙",clr:"#A78BFA",what:"Начало священного месяца поста — 4-го столпа ислама. Месяц милости и прощения.",how:"Намерение на пост, сухур, ифтар, таравих-намазы, чтение всего Корана за месяц, увеличение садаки."},
+  {m:9,d:27,n:"Ляйлят аль-Кадр",ar:"ليلة القدر",icon:"⭐",clr:"#FBBF24",what:"Ночь Предопределения — лучше тысячи месяцев. В эту ночь был ниспослан Коран.",how:"Искать в нечётные ночи последних 10 дней Рамадана (21, 23, 25, 27, 29). Всю ночь в поклонении: намаз, Коран, дуа «Аллахумма иннака 'афувун тухиббуль-'афва, фа'фу 'анни»."},
+  {m:10,d:1,n:"Ид аль-Фитр (Ораза Айт)",ar:"عيد الفطر",icon:"🎉",clr:"#0D6B3D",what:"Праздник разговения после Рамадана. Один из двух главных праздников ислама.",how:"Перед праздничным намазом — закят аль-Фитр (еда бедным). Гусль (полное омовение), лучшая одежда, такбиры. Праздничный намаз Ид в мечети. Поздравления, подарки, посещение родственников."},
+  {m:12,d:9,n:"День Арафа",ar:"يوم عرفة",icon:"⛰",clr:"#2DD4BF",what:"Главный день хаджа. Пророк ﷺ сказал: пост в этот день стирает грехи прошлого и будущего года (для непаломников).",how:"Для паломников — стояние на горе Арафат с полудня до заката. Для остальных — пост, много дуа, зикр: «Ля иляха илляллаху вахдаху ля шарика лях»."},
+  {m:12,d:10,n:"Ид аль-Адха (Курбан Айт)",ar:"عيد الأضحى",icon:"🐏",clr:"#FBBF24",what:"Праздник жертвоприношения — в память о готовности Ибрахима ﷷ принести в жертву Исмаила ﷷ.",how:"Гусль, праздничная одежда, такбиры. Праздничный намаз Ид. Курбан (жертвоприношение барана/коровы/верблюда): треть — бедным, треть — родным, треть — себе. Продолжается 3 дня (ташрик)."},
+  {m:12,d:8,n:"Начало хаджа",ar:"بداية الحج",icon:"🕋",clr:"#D4AF37",what:"8 Зуль-хиджа — День Тарвия. Начало обрядов хаджа: отправление в Мину.",how:"Для паломников — ихрам, намаз 5 раз в Мине. Для остальных — дуа за хаджиев, пост предпочтителен в первые 9 дней Зуль-хиджа."},
+];
 
 // ── Data ──
 const SITES=[
@@ -94,7 +136,102 @@ const HALAL=[
 ];
 const SS={h:{l:"Халяль",c:C.green},x:{l:"Харам",c:C.red},"?":{l:"?",c:"#FBBF24"}};
 
+// ── Shop ──
+const SHOP_CATS=[{id:"all",l:"Все",icon:"🛍"},{id:"books",l:"Книги",icon:"📚"},{id:"prayer",l:"Намаз",icon:"🕌"},{id:"clothing",l:"Одежда",icon:"👔"},{id:"decor",l:"Декор",icon:"🏠"},{id:"gifts",l:"Подарки",icon:"🎁"},{id:"digital",l:"Цифровое",icon:"📱"}];
+const SHOP_ITEMS=[
+  {id:1,n:"Коран с транслитерацией",ar:"القرآن الكريم",cat:"books",price:"2 500 сом",oldPrice:"3 200 сом",rating:4.9,reviews:342,img:"https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=400",desc:"Коран на арабском с параллельной транслитерацией и переводом на русский. Твёрдый переплёт, 604 стр.",badge:"Хит",badgeColor:C.gold},
+  {id:2,n:"Молитвенный коврик Premium",ar:"سجادة الصلاة",cat:"prayer",price:"1 800 сом",rating:4.8,reviews:156,img:"https://images.unsplash.com/photo-1585036156171-384164a8c675?w=400",desc:"Мягкий бархатный коврик 120×70 см. Встроенный компас, антискользящее покрытие.",badge:"Новинка",badgeColor:C.green},
+  {id:3,n:"Тасбих из сандала (33 бусины)",ar:"سبحة خشبية",cat:"prayer",price:"900 сом",rating:4.7,reviews:89,img:"https://images.unsplash.com/photo-1590076215667-875d4ef2d7de?w=400",desc:"Чётки из натурального сандалового дерева. 33 бусины. Ручная работа, приятный аромат."},
+  {id:4,n:"Хиджаб шифон (набор 3 шт.)",ar:"حجاب شيفون",cat:"clothing",price:"1 200 сом",oldPrice:"1 800 сом",rating:4.9,reviews:267,img:"https://images.unsplash.com/photo-1553621042-f6e147245754?w=400",desc:"Набор из 3 премиум-хиджабов: чёрный, бежевый, изумрудный. Лёгкий шифон.",badge:"-33%",badgeColor:C.red},
+  {id:5,n:"Книга «40 хадисов ан-Навави»",ar:"الأربعون النووية",cat:"books",price:"650 сом",rating:4.8,reviews:198,img:"https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400",desc:"Сборник 40 важнейших хадисов с комментариями. Арабский текст + транслитерация + перевод."},
+  {id:6,n:"Лампа-полумесяц LED",ar:"مصباح هلال",cat:"decor",price:"2 100 сом",rating:4.6,reviews:73,img:"https://images.unsplash.com/photo-1564769625905-50e93615e769?w=400",desc:"Настольная LED-лампа в форме полумесяца со звездой. 3 режима света. USB-зарядка."},
+  {id:7,n:"Масло чёрного тмина 250мл",ar:"زيت الحبة السوداء",cat:"gifts",price:"750 сом",rating:4.9,reviews:412,img:"https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400",desc:"100% натуральное масло чёрного тмина (хабба сауда). Пророк ﷺ сказал: «В нём лекарство от всего, кроме смерти».",badge:"Сунна",badgeColor:C.gold},
+  {id:8,n:"Подарочный набор «Рамадан»",ar:"هدية رمضان",cat:"gifts",price:"3 500 сом",oldPrice:"4 500 сом",rating:4.8,reviews:134,img:"https://images.unsplash.com/photo-1532635241-17e820acc59f?w=400",desc:"Тасбих + масло + финики Аджва + мисвак + открытка. Красивая коробка.",badge:"Подарок",badgeColor:C.purple},
+  {id:9,n:"Курс «Арабский за 30 дней»",ar:"دورة العربية",cat:"digital",price:"1 990 сом",rating:4.7,reviews:89,img:"https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400",desc:"Онлайн-курс чтения арабского. 30 видеоуроков + PDF-рабочая тетрадь. Доступ навсегда."},
+  {id:10,n:"Мисвак натуральный (5 шт.)",ar:"مسواك",cat:"prayer",price:"350 сом",rating:4.6,reviews:203,img:"https://images.unsplash.com/photo-1571942676516-bcab84649e44?w=400",desc:"Набор из 5 палочек Арак. Сунна Пророка ﷺ. Натуральная чистка и отбеливание зубов.",badge:"Сунна",badgeColor:C.gold},
+  {id:11,n:"Каллиграфия «Аятуль-Курси»",ar:"آية الكرسي",cat:"decor",price:"4 200 сом",rating:5.0,reviews:45,img:"https://images.unsplash.com/photo-1579541814924-49fef17c5be5?w=400",desc:"Панно 60×40 см. Золотая каллиграфия Аятуль-Курси на чёрном фоне. Рама из дерева."},
+  {id:12,n:"Курта мужская хлопок",ar:"قميص إسلامي",cat:"clothing",price:"2 800 сом",rating:4.7,reviews:67,img:"https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400",desc:"Длинная мужская курта из 100% хлопка. Белая, размеры S-XXL. Идеально для намаза."},
+];
+
 // ── Namaz guide ──
+const PILLARS=[
+  {
+    n:"Шахада",ar:"الشهادة",tl:"Ash-shahāda — Свидетельство веры",icon:"☝️",clr:"#D4AF37",
+    what:"Искреннее свидетельство словом и сердцем о единобожии Аллаха и пророчестве Мухаммада ﷺ. Это ключ к исламу — человек становится мусульманином, произнеся её с пониманием и искренностью.",
+    how:[
+      "Произнести на арабском: «Ашхаду алля иляха илляллах, ва ашхаду анна Мухаммадан расулюллах».",
+      "Перевод: «Свидетельствую, что нет божества, кроме Аллаха, и свидетельствую, что Мухаммад — посланник Аллаха».",
+      "Произносить с пониманием смысла и искренним убеждением сердца.",
+      "Верить, что Аллах — Один, не имеет сотоварищей, не рождён и не родил.",
+      "Верить, что Мухаммад ﷺ — последний посланник для всех людей и джиннов.",
+      "Подтверждать Шахаду всей своей жизнью: поклонением, поступками, моралью."
+    ],
+    quran:{ar:"لَا إِلَٰهَ إِلَّا اللَّهُ مُحَمَّدٌ رَّسُولُ اللَّهِ",ru:"Нет божества, кроме Аллаха, Мухаммад — посланник Аллаха.",src:"Сунна и основа исламского вероучения"},
+    note:"Шахада — это не просто слова, а договор с Аллахом. Она требует отречения от поклонения кому-либо, кроме Него."
+  },
+  {
+    n:"Намаз (Салят)",ar:"الصلاة",tl:"As-salāh — Молитва",icon:"🕌",clr:"#D4AF37",
+    what:"Пятикратная ежедневная молитва — главное поклонение после Шахады. Связь раба с Господом, за которую спросят первой в Судный день.",
+    how:[
+      "Совершать 5 намазов в установленное время: Фаджр (до рассвета), Зухр (после полудня), Аср (предвечерний), Магриб (закат), Иша (ночной).",
+      "Перед намазом — совершить омовение (вуду) и надеть чистую одежду, прикрывающую аурат.",
+      "Обратиться лицом к Каабе (кибле) и иметь ният (намерение) в сердце.",
+      "Произнести такбир «Аллаху Акбар» — вход в намаз.",
+      "Прочитать суру «Аль-Фатиха» и ещё суру/аяты в положении стоя (кыям).",
+      "Совершить поясной поклон (руку'), выпрямление (и'тидаль) и два земных поклона (суджуд) в каждом ракаате.",
+      "Завершить намаз ташаххудом и приветствием «Ас-саляму алейкум ва рахматуллах» направо и налево."
+    ],
+    quran:{ar:"إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا",ru:"Воистину, намаз предписан верующим в определённое время.",src:"Коран 4:103"},
+    note:"Пропуск намаза без уважительной причины — великий грех. Пропущенный намаз нужно возместить (каза). Женщины не совершают намаз во время месячных и послеродовых кровотечений."
+  },
+  {
+    n:"Закят",ar:"الزكاة",tl:"Az-zakāh — Очистительная милостыня",icon:"💰",clr:"#2DD4BF",
+    what:"Обязательная ежегодная выплата части имущества бедным. Очищение богатства и души от скупости. Закят — право бедных на имущество богатых, а не подарок.",
+    how:[
+      "Выплачивается тем, у кого имущество превысило нисаб (минимум: ~85 г золота или ~595 г серебра) и пролежало один лунный год.",
+      "Размер — 2,5% от сбережений: денег, золота, серебра, товаров для торговли, инвестиций.",
+      "Получатели (8 категорий в Коране 9:60): бедные, нуждающиеся, сборщики закята, обращённые в ислам, рабы (для выкупа), должники, на пути Аллаха, путники.",
+      "Нельзя отдавать родителям, детям, супругам (их содержание — обязанность).",
+      "Желательно выплачивать в Рамадан — награда многократно увеличивается.",
+      "Скот, урожай и полезные ископаемые имеют отдельные правила расчёта."
+    ],
+    quran:{ar:"وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ",ru:"Совершайте намаз и выплачивайте закят.",src:"Коран 2:43"},
+    note:"Помимо закята есть садака — добровольная милостыня в любое время и в любом размере. Это отводит беду и увеличивает ризк."
+  },
+  {
+    n:"Саум (Ураза)",ar:"الصوم",tl:"As-saum — Пост в Рамадан",icon:"🌙",clr:"#A78BFA",
+    what:"Обязательный пост в священный месяц Рамадан — от рассвета (Фаджра) до заката (Магриба). Воздержание от еды, питья и интимной близости. Школа богобоязненности (таква).",
+    how:[
+      "Иметь ният (намерение) поститься до рассвета.",
+      "Встать на сухур (предрассветный приём пищи) — это сунна с большой наградой.",
+      "С началом Фаджра — полный отказ от еды, питья, курения и супружеской близости.",
+      "Воздерживаться от грехов: лжи, сплетен, споров, гнева, дурных взглядов.",
+      "С заходом солнца — разговеться (ифтар), желательно финиками и водой.",
+      "Ночью совершать таравих (особые ночные намазы) в мечети или дома.",
+      "В последние 10 ночей искать Ляйлят аль-Кадр (Ночь Предопределения) — лучше 1000 месяцев.",
+      "В конце месяца выплатить закят аль-Фитр перед праздничным намазом Ид аль-Фитр."
+    ],
+    quran:{ar:"يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ",ru:"О те, которые уверовали! Вам предписан пост.",src:"Коран 2:183"},
+    note:"Освобождаются: больные, путники, беременные, кормящие, пожилые, женщины в хайд/нифас. Пропущенные дни возмещаются позже или кормлением бедного (фидья)."
+  },
+  {
+    n:"Хадж",ar:"الحج",tl:"Al-hajj — Паломничество в Мекку",icon:"🕋",clr:"#FBBF24",
+    what:"Паломничество к Священной Каабе в Мекке в месяц Зуль-хиджа. Обязательно один раз в жизни для того, кто имеет физическую и материальную возможность.",
+    how:[
+      "Войти в состояние ихрама (особая одежда и ограничения) с ниятом на хадж.",
+      "Совершить таваф — семикратный обход вокруг Каабы против часовой стрелки.",
+      "Саи — семикратный бег между холмами Сафа и Марва в память о Хаджар.",
+      "8 Зуль-хиджа — отправиться в Мину и провести там день в поклонении.",
+      "9 Зуль-хиджа — вукуф на горе Арафат с полудня до заката (главный столп хаджа).",
+      "Ночевать в Муздалифе, собрать камни для побивания шайтана.",
+      "10 Зуль-хиджа — Ид аль-Адха: побивание большого столба, жертвоприношение, бритьё головы.",
+      "Вернуться в Мекку для прощального тавафа. Желательно посетить Медину и мечеть Пророка ﷺ."
+    ],
+    quran:{ar:"وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ مَنِ اسْتَطَاعَ إِلَيْهِ سَبِيلًا",ru:"На людях — обязательство перед Аллахом совершить хадж к Дому, если они способны на это.",src:"Коран 3:97"},
+    note:"Принятый хадж (хадж мабрур) стирает все предыдущие грехи — верующий возвращается чистым, как в день рождения (хадис Бухари). Малое паломничество — умра — можно совершать в любое время года."
+  },
+];
+
 const WUDU_STEPS=[
   {n:"Ният",d:"Намерение в сердце совершить омовение ради Аллаха",icon:"🤲"},
   {n:"Бисмиллях",d:"Скажите «Бисмилляхи-р-Рахмани-р-Рахим»",icon:"📿"},
@@ -227,14 +364,18 @@ function useCompass(){
   const[heading,setHeading]=useState(null);
   const[supported,setSupported]=useState(false);
   const[permissionNeeded,setPermissionNeeded]=useState(false);
+  const cleanupRef=useRef(null);
 
   const startListening=useCallback(()=>{
+    if(cleanupRef.current)cleanupRef.current();
     const handler=e=>{
       if(e.webkitCompassHeading!==undefined){setHeading(e.webkitCompassHeading);setSupported(true);}
       else if(e.alpha!==null){setHeading((360-e.alpha)%360);setSupported(true);}
     };
     window.addEventListener('deviceorientation',handler,true);
-    return()=>window.removeEventListener('deviceorientation',handler,true);
+    const off=()=>window.removeEventListener('deviceorientation',handler,true);
+    cleanupRef.current=off;
+    return off;
   },[]);
 
   const requestPermission=useCallback(async()=>{
@@ -251,8 +392,9 @@ function useCompass(){
     if(typeof DeviceOrientationEvent.requestPermission==='function'){
       setPermissionNeeded(true);
     }else{
-      return startListening();
+      startListening();
     }
+    return()=>{if(cleanupRef.current){cleanupRef.current();cleanupRef.current=null;}};
   },[startListening]);
 
   return{heading,supported,permissionNeeded,requestPermission};
@@ -275,6 +417,14 @@ export default function KikoFull(){
   const[surahCat,setSurahCat]=useState("fav");
   // Namaz guide
   const[guideView,setGuideView]=useState("overview"); // overview|wudu|steps
+  // Shop
+  const[shopCat,setShopCat]=useState("all");
+  const[selProduct,setSelProduct]=useState(null);
+  const[cart,setCart]=useState(()=>{try{return JSON.parse(localStorage.getItem("kiko_cart"))||[];}catch{return[];}});
+  const addToCart=(item)=>{setCart(prev=>{const n=[...prev,item];try{localStorage.setItem("kiko_cart",JSON.stringify(n));}catch{}return n;});};
+  const removeFromCart=(id)=>{setCart(prev=>{const n=prev.filter((_,i)=>i!==id);try{localStorage.setItem("kiko_cart",JSON.stringify(n));}catch{}return n;});};
+  const cartTotal=cart.reduce((s,it)=>s+parseInt(it.price.replace(/\D/g,"")),0);
+  const[showCart,setShowCart]=useState(false);
   // Chat
   const[chatMsgs,setChatMsgs]=useState([]);
   const[chatIn,setChatIn]=useState("");
@@ -286,12 +436,67 @@ export default function KikoFull(){
   const[roomSearch,setRoomSearch]=useState("");
   const[selRoom,setSelRoom]=useState(null);
   const[joined,setJoined]=useState(false);
+  const[micOn,setMicOn]=useState(false);
+  const[showProj,setShowProj]=useState(true);
   const[showCreate,setShowCreate]=useState(false);
   const[newRoom,setNewRoom]=useState({name:"",type:"prayer",lang:"Русский",desc:"",max:50,proj:""});
   // Tasbih
   const[tasbihPreset,setTasbihPreset]=useState(0);
   const[tasbihCount,setTasbihCount]=useState(0);
   const[tasbihTotal,setTasbihTotal]=useState(()=>{try{return parseInt(localStorage.getItem("kiko_tasbih_total"))||0;}catch{return 0;}});
+  // Prayer tracker — 3 состояния: 'ontime' | 'late' | 'missed'
+  const todayKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  const[prayerLog,setPrayerLog]=useState(()=>{try{return JSON.parse(localStorage.getItem("kiko_prayer_log"))||{};}catch{return{};}});
+  // Нормализация старого формата (boolean → 'ontime')
+  const getStatus=(day,name)=>{const v=day?.[name];if(v===true)return"ontime";if(typeof v==="string")return v;return null;};
+  const isDonePrayer=(day,name)=>{const s=getStatus(day,name);return s==="ontime"||s==="late";};
+  const todayPrayers=prayerLog[todayKey]||{};
+  const todayDone=["Фаджр","Зухр","Аср","Магриб","Иша"].filter(n=>isDonePrayer(todayPrayers,n)).length;
+  // Установка статуса. Клик по тому же статусу снимает отметку
+  const setPrayerStatus=(name,status)=>{
+    setPrayerLog(prev=>{
+      const day=prev[todayKey]||{};
+      const cur=getStatus(day,name);
+      const next=cur===status?null:status;
+      const newDay={...day};
+      if(next===null)delete newDay[name];else newDay[name]=next;
+      const updated={...prev,[todayKey]:newDay};
+      try{localStorage.setItem("kiko_prayer_log",JSON.stringify(updated));}catch{}
+      return updated;
+    });
+  };
+  // Prayer streak — день засчитан если все 5 совершены (вовремя или запоздал)
+  const calcStreak=()=>{
+    let streak=0;
+    const d=new Date(now);
+    const tk=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    const tp=prayerLog[tk]||{};
+    const tpDone=["Фаджр","Зухр","Аср","Магриб","Иша"].filter(n=>isDonePrayer(tp,n)).length;
+    const tpAny=["Фаджр","Зухр","Аср","Магриб","Иша"].filter(n=>getStatus(tp,n)).length;
+    if(tpDone===5){streak++;d.setDate(d.getDate()-1);}
+    else if(tpAny>0){streak=0;d.setDate(d.getDate()-1);}
+    else{d.setDate(d.getDate()-1);}
+    for(let i=0;i<365;i++){
+      const k=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+      const p=prayerLog[k]||{};
+      if(["Фаджр","Зухр","Аср","Магриб","Иша"].filter(n=>isDonePrayer(p,n)).length===5){streak++;d.setDate(d.getDate()-1);}
+      else break;
+    }
+    return streak;
+  };
+  const prayerStreak=calcStreak();
+  // Всего совершённых (вовремя + запоздал)
+  const totalPrayersAllTime=Object.values(prayerLog).reduce((s,day)=>s+["Фаджр","Зухр","Аср","Магриб","Иша"].filter(n=>isDonePrayer(day,n)).length,0);
+  // Каза: пропущенные из истории + ручной долг (для намазов до установки приложения)
+  const[qazaLog,setQazaLog]=useState(()=>{try{return JSON.parse(localStorage.getItem("kiko_qaza"))||{Фаджр:0,Зухр:0,Аср:0,Магриб:0,Иша:0};}catch{return{Фаджр:0,Зухр:0,Аср:0,Магриб:0,Иша:0};}});
+  const missedFromLog=["Фаджр","Зухр","Аср","Магриб","Иша"].reduce((acc,n)=>{acc[n]=Object.values(prayerLog).filter(d=>getStatus(d,n)==="missed").length;return acc;},{});
+  const totalMissedFromLog=Object.values(missedFromLog).reduce((s,v)=>s+v,0);
+  const totalManualQaza=Object.values(qazaLog).reduce((s,v)=>s+v,0);
+  const totalQaza=totalMissedFromLog+totalManualQaza;
+  const addQaza=(name,delta)=>{setQazaLog(prev=>{const n={...prev,[name]:Math.max(0,(prev[name]||0)+delta)};try{localStorage.setItem("kiko_qaza",JSON.stringify(n));}catch{}return n;});};
+  // Prayer history — view past days
+  const[historyOffset,setHistoryOffset]=useState(0);
+  const[showBacklog,setShowBacklog]=useState(false);
 
   useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t);},[]);
   useEffect(()=>{chatRef.current?.scrollIntoView({behavior:"smooth"});},[chatMsgs]);
@@ -299,10 +504,11 @@ export default function KikoFull(){
   const prayers=calcPrayers(now,loc.lat,loc.lng);
   const qibla=calcQibla(loc.lat,loc.lng);
   const cm=now.getHours()*60+now.getMinutes();
-  const np=prayers.find(p=>p.min>cm)||prayers[0];
+  const np=prayers.filter(p=>p.name!=="Восход").find(p=>p.min>cm)||prayers.filter(p=>p.name!=="Восход")[0];
   const until=np.min>cm?np.min-cm:1440-cm+np.min;
   const dn=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
   const ayah=AYAHS[dn%AYAHS.length];
+  const hijri=toHijri(now);
 
   // Tasbih click handler
   const tasbihClick=useCallback(()=>{
@@ -318,24 +524,30 @@ export default function KikoFull(){
     }
   },[tasbihCount,tasbihPreset,tasbihTotal]);
 
-  // AI Chat — local simulation (no API key needed for web)
+  // AI Chat — мульти-агентная система через Groq
+  const[chatAgent,setChatAgent]=useState("");
   const sendChat=useCallback(async()=>{
     if(!chatIn.trim()||chatLoad)return;
     const m=chatIn.trim();setChatIn("");
-    setChatMsgs(p=>[...p,{r:"u",t:m}]);setChatLoad(true);
-    await new Promise(r=>setTimeout(r,800));
-    const lower=m.toLowerCase();
-    let answer="Ассаляму алейкум! Я AI-помощник KIKO. Пока я работаю в офлайн-режиме.";
-    if(lower.includes("молитв")||lower.includes("намаз"))answer="Намаз — это обязательная молитва, совершаемая 5 раз в день:\n\n1. Фаджр — перед рассветом (2 ракаата)\n2. Зухр — после полудня (4 ракаата)\n3. Аср — послеобеденная (4 ракаата)\n4. Магриб — после заката (3 ракаата)\n5. Иша — ночная (4 ракаата)\n\nПеред намазом нужно совершить омовение (вуду).";
-    else if(lower.includes("омовени")||lower.includes("вуду"))answer="Вуду (омовение) — подготовка к намазу:\n\n1. Намерение (ният)\n2. Мытьё рук 3 раза\n3. Полоскание рта 3 раза\n4. Промывание носа 3 раза\n5. Мытьё лица 3 раза\n6. Мытьё рук до локтей 3 раза\n7. Протирание головы\n8. Мытьё ног до щиколоток 3 раза";
-    else if(lower.includes("халяль")||lower.includes("харам"))answer="Халяль — разрешённое в исламе.\nХарам — запрещённое.\n\nХарам в еде: свинина, алкоголь, кровь, мертвечина.\nМясо должно быть забито с именем Аллаха.\n\nПроверяйте добавки: E120, E441 могут быть из харам-источников.";
-    else if(lower.includes("пост")||lower.includes("рамадан"))answer="Пост в Рамадан — один из 5 столпов ислама:\n\n• Воздержание от еды, питья от рассвета (Фаджр) до заката (Магриб)\n• Длится весь месяц Рамадан\n• Освобождены: больные, путники, беременные, дети\n• Цель: богобоязненность и очищение";
-    else if(lower.includes("кибл"))answer=`Кибла — направление на Каабу в Мекке.\n\nИз вашего местоположения (${loc.name}) направление Киблы: ${Math.round(qibla)}° от Севера.\n\nОткройте вкладку «Кибла» для компаса.`;
-    else if(lower.includes("мазхаб"))answer="4 основных мазхаба (правовые школы):\n\n1. Ханафитский — Абу Ханифа (Центральная Азия, Турция)\n2. Маликитский — Имам Малик (Сев. Африка)\n3. Шафиитский — Имам Шафии (ЮВА, Египет)\n4. Ханбалитский — Имам Ахмад (С. Аравия)\n\nВсе четыре — правильные пути в исламе.";
-    else if(lower.includes("закят")||lower.includes("закат"))answer="Закят — обязательная милостыня (2.5% от сбережений):\n\n• Выплачивается раз в год\n• Если сбережения выше нисаба (~85г золота)\n• Распределяется 8 категориям нуждающихся\n• Один из 5 столпов ислама";
-    setChatMsgs(p=>[...p,{r:"a",t:answer}]);
-    setChatLoad(false);
-  },[chatIn,chatLoad,loc,qibla]);
+    const newMsgs=[...chatMsgs,{r:"u",t:m}];
+    setChatMsgs(newMsgs);setChatLoad(true);setChatAgent("Думаю...");
+    try{
+      const res=await fetch("/api/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message:m,history:chatMsgs.slice(-10)})
+      });
+      const data=await res.json();
+      if(data.error){
+        setChatMsgs(p=>[...p,{r:"a",t:"⚠️ "+data.error,agent:"Система",icon:"⚙️"}]);
+      }else{
+        setChatMsgs(p=>[...p,{r:"a",t:data.text,agent:data.agent,icon:data.icon}]);
+      }
+    }catch(e){
+      setChatMsgs(p=>[...p,{r:"a",t:"Нет связи с сервером. Проверьте интернет.",agent:"Система",icon:"⚙️"}]);
+    }
+    setChatLoad(false);setChatAgent("");
+  },[chatIn,chatLoad,chatMsgs]);
 
   const ti=type=>RT.find(t=>t.id===type)||RT[0];
   const filteredRooms=ROOMS.filter(r=>{
@@ -346,11 +558,13 @@ export default function KikoFull(){
   });
 
   const tabs=[
-    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"learn",icon:"📚",l:"Обучение"},
+    {id:"dashboard",icon:"◉",l:"Главная"},{id:"prayer",icon:"🕌",l:"Намаз"},{id:"calendar",icon:"📅",l:"Календарь"},
+    {id:"learn",icon:"📚",l:"Обучение"},
     {id:"qibla",icon:"🧭",l:"Кибла"},{id:"tasbih",icon:"📿",l:"Тасбих"},
     {id:"quran",icon:"📖",l:"Коран"},{id:"stories",icon:"📜",l:"Истории"},
     {id:"sites",icon:"🗺",l:"Святыни"},{id:"mecca",icon:"📡",l:"Live"},
     {id:"content",icon:"🤲",l:"Дуа"},{id:"halal",icon:"🍽",l:"Халяль"},
+    {id:"shop",icon:"🛍",l:"Магазин"},
     {id:"ummah",icon:"👥",l:"Умма"},{id:"chat",icon:"💬",l:"AI"},
   ];
   // Mobile bottom tabs
@@ -361,7 +575,7 @@ export default function KikoFull(){
   const[showMore,setShowMore]=useState(false);
   const moreTabs=tabs.filter(t=>!mobileTabs.find(mt=>mt.id===t.id));
 
-  const switchTab=(t)=>{setTab(t);setSelSite(null);setSelStory(null);setSelRoom(null);setJoined(false);setShowMore(false);setSelSurah(null);setGuideView("overview");};
+  const switchTab=(t)=>{setTab(t);setSelSite(null);setSelStory(null);setSelRoom(null);setJoined(false);setShowMore(false);setSelSurah(null);setGuideView("overview");setSelProduct(null);setShowCart(false);};
 
   return(
     <div style={{minHeight:"100vh",minHeight:"100dvh",background:C.bg,color:C.cream,fontFamily:"'Segoe UI',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
@@ -369,10 +583,13 @@ export default function KikoFull(){
       <header style={{padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${C.border}`,background:"rgba(4,13,8,.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:34,height:34,borderRadius:10,background:C.gradG,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#040D08",boxShadow:"0 2px 12px rgba(13,107,61,.4)"}}>K</div>
-          <div><span style={{fontSize:15,fontWeight:800,color:C.gold,letterSpacing:.5}}>KIKO</span><span style={{fontSize:11,color:C.muted,marginLeft:6,fontWeight:300}}>Islamic Guide</span></div>
+          <div><span style={{fontSize:15,fontWeight:800,color:C.gold,letterSpacing:.5}}>Mizan</span><span style={{fontSize:11,color:C.muted,marginLeft:6,fontWeight:300}}>Islamic Guide</span></div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontSize:18,fontWeight:200,color:C.cream,fontVariantNumeric:"tabular-nums",fontFamily:"'SF Mono',monospace"}}>{now.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:18,fontWeight:200,color:C.cream,fontVariantNumeric:"tabular-nums",fontFamily:"'SF Mono',monospace"}}>{now.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</div>
+            <div style={{fontSize:8,color:C.muted,fontWeight:600}}>{hijri.day} {hijri.monthName}</div>
+          </div>
         </div>
       </header>
 
@@ -393,45 +610,76 @@ export default function KikoFull(){
           {/* ═══ DASHBOARD ═══ */}
           {tab==="dashboard"&&<>
             {geoLoading&&<div style={{fontSize:11,color:C.muted,marginBottom:8,textAlign:"center"}}>📍 Определяем местоположение...</div>}
-            {/* Hero prayer card with Kaaba background */}
-            <div style={{borderRadius:18,overflow:"hidden",marginBottom:16,position:"relative",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg/1280px-Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg" alt="Мекка" style={{width:"100%",height:isMobile?200:240,objectFit:"cover",display:"block",filter:"brightness(.4)"}} loading="lazy"/>
-              <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,rgba(4,13,8,.2) 0%,rgba(4,13,8,.85) 70%,rgba(4,13,8,.98) 100%)",padding:isMobile?"16px":"24px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
-                <div style={{fontSize:11,color:C.muted,marginBottom:4}}>Следующий намаз • {loc.name}</div>
-                <div style={{fontSize:isMobile?24:30,fontWeight:700,color:C.gold,lineHeight:1.2}}>{np.icon} {np.name} <span style={{fontWeight:200,fontSize:isMobile?18:22,color:C.cream}}>{np.time}</span></div>
-                <div style={{fontSize:13,color:C.muted,marginTop:4}}>через <span style={{color:C.goldLight,fontWeight:600}}>{Math.floor(until/60)}ч {until%60}мин</span></div>
-                <div style={{display:"flex",gap:5,marginTop:14,flexWrap:"wrap"}}>
-                  {prayers.map(p=>(
-                    <span key={p.name} style={{padding:"4px 10px",borderRadius:8,fontSize:10,background:p.name===np.name?C.gold:p.min<=cm?"rgba(255,255,255,.04)":"rgba(45,212,191,.1)",color:p.name===np.name?"#040D08":p.min<=cm?C.muted:C.cream,fontWeight:p.name===np.name?700:400,opacity:p.min<=cm?.5:1,backdropFilter:"blur(4px)"}}>{p.icon} {p.name} {p.time}</span>
+            {/* Hero prayer card — lightweight */}
+            <div style={{borderRadius:16,overflow:"hidden",marginBottom:14,position:"relative"}}>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg/1280px-Masjid_al-Haram%2C_Mecca%2C_Saudi_Arabia.jpg" alt="Мекка" style={{width:"100%",height:isMobile?180:220,objectFit:"cover",display:"block",filter:"brightness(.35)"}} loading="lazy"/>
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,transparent 0%,rgba(4,13,8,.85) 65%,rgba(4,13,8,.98) 100%)",padding:isMobile?"14px":"20px",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+                <div style={{fontSize:10,color:C.muted,marginBottom:2}}>{loc.name} • {hijri.day} {hijri.monthName}</div>
+                <div style={{fontSize:isMobile?22:28,fontWeight:600,color:C.gold,lineHeight:1.2}}>{np.icon} {np.name} <span style={{fontWeight:200,fontSize:isMobile?16:20,color:C.cream}}>{np.time}</span></div>
+                <div style={{fontSize:12,color:C.muted,marginTop:2}}>через <span style={{color:C.goldLight,fontWeight:500}}>{Math.floor(until/60)}ч {until%60}мин</span></div>
+                <div style={{display:"flex",gap:4,marginTop:10,flexWrap:"wrap"}}>
+                  {[...prayers.filter(p=>p.name==="Восход"),...prayers.filter(p=>p.name!=="Восход")].map(p=>(
+                    <span key={p.name} style={{padding:"3px 8px",borderRadius:6,fontSize:9,background:p.name===np.name?C.gold:p.min<=cm?"rgba(255,255,255,.03)":"rgba(45,212,191,.08)",color:p.name===np.name?"#040D08":p.min<=cm?C.muted:C.cream,fontWeight:p.name===np.name?700:400,opacity:p.min<=cm?.4:1}}>{p.icon} {p.name} {p.time}</span>
                   ))}
                 </div>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12,marginBottom:12}}>
-              <Card onClick={()=>switchTab("content")}>
-                <Label>АЯТ ДНЯ</Label>
-                <div style={{fontSize:16,textAlign:"right",lineHeight:1.8,color:C.goldLight,marginBottom:6}}>{ayah.ar}</div>
-                {ayah.tl&&<div style={{fontSize:11,color:C.goldLight,marginBottom:4,fontStyle:"italic"}}>📖 {ayah.tl}</div>}
-                <div style={{fontSize:12,color:C.cream,lineHeight:1.6}}>{ayah.ru}</div>
-                <div style={{fontSize:9,color:C.muted,marginTop:6}}>— {ayah.s}, {ayah.n}</div>
-              </Card>
-              <Card onClick={()=>switchTab("qibla")} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-                <Label>КИБЛА</Label>
-                <svg viewBox="0 0 90 90" width="90" height="90">
-                  <circle cx="45" cy="45" r="42" fill="none" stroke={C.border} strokeWidth="1"/>
-                  <g transform={`rotate(${qibla} 45 45)`}><line x1="45" y1="45" x2="45" y2="10" stroke={C.gold} strokeWidth="2.5" strokeLinecap="round"/><polygon points="45,6 40,18 50,18" fill={C.gold}/></g>
-                  <circle cx="45" cy="45" r="3" fill={C.gold}/>
-                </svg>
-                <div style={{fontSize:18,fontWeight:600,color:C.gold,marginTop:4}}>{Math.round(qibla)}°</div>
-                {compass.supported&&<div style={{fontSize:9,color:C.green,marginTop:2}}>● Компас активен</div>}
-              </Card>
+
+            {/* Stats row — compact */}
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <div onClick={()=>switchTab("prayer")} style={{flex:1,background:C.card,borderRadius:12,padding:"10px 12px",border:`1px solid ${C.border}`,cursor:"pointer"}}>
+                <div style={{fontSize:8,color:C.muted,textTransform:"uppercase",letterSpacing:1}}>Намазы</div>
+                <div style={{fontSize:22,fontWeight:300,color:todayDone===5?C.green:C.gold,marginTop:2}}>{todayDone}<span style={{fontSize:11,color:C.muted}}>/5</span></div>
+                <div style={{display:"flex",gap:3,marginTop:4}}>
+                  {["Фаджр","Зухр","Аср","Магриб","Иша"].map(n=>{const s=getStatus(todayPrayers,n);const clr=s==="ontime"?C.green:s==="late"?"#FBBF24":s==="missed"?C.red:"rgba(255,255,255,.1)";return(
+                    <div key={n} style={{width:6,height:6,borderRadius:"50%",background:clr}}/>
+                  );})}
+                </div>
+              </div>
+              <div style={{flex:1,background:C.card,borderRadius:12,padding:"10px 12px",border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:8,color:C.muted,textTransform:"uppercase",letterSpacing:1}}>Серия</div>
+                <div style={{fontSize:22,fontWeight:300,color:C.gold,marginTop:2}}>{prayerStreak>0?`🔥${prayerStreak}`:"—"}</div>
+                <div style={{fontSize:8,color:C.muted,marginTop:4}}>всего: {totalPrayersAllTime}</div>
+              </div>
+              <div onClick={()=>switchTab("qibla")} style={{flex:1,background:C.card,borderRadius:12,padding:"10px 12px",border:`1px solid ${C.border}`,cursor:"pointer"}}>
+                <div style={{fontSize:8,color:C.muted,textTransform:"uppercase",letterSpacing:1}}>Кибла</div>
+                <div style={{fontSize:22,fontWeight:300,color:C.gold,marginTop:2}}>{Math.round(qibla)}°</div>
+                {compass.supported&&<div style={{fontSize:7,color:C.green,marginTop:4}}>● Компас</div>}
+              </div>
+              {totalQaza>0&&<div onClick={()=>switchTab("prayer")} style={{flex:1,background:`${C.red}08`,borderRadius:12,padding:"10px 12px",border:`1px solid ${C.red}20`,cursor:"pointer"}}>
+                <div style={{fontSize:8,color:C.red,textTransform:"uppercase",letterSpacing:1}}>Каза</div>
+                <div style={{fontSize:22,fontWeight:300,color:C.red,marginTop:2}}>{totalQaza}</div>
+                <div style={{fontSize:7,color:C.muted,marginTop:4}}>пропущено</div>
+              </div>}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(3,1fr)":"repeat(5,1fr)",gap:10}}>
-              {[{i:"📚",l:"Обучение",t:"learn",g:"#0D6B3D"},{i:"📖",l:"Коран",t:"quran",g:"#0A5C34"},{i:"🗺",l:"Святыни",t:"sites",g:"#1a4030"},{i:"📡",l:"Мекка",t:"mecca",g:"#0f2820"},{i:"👥",l:"Умма",t:"ummah",g:"#0f2a28"}].map(a=>(
-                <Card key={a.t} onClick={()=>switchTab(a.t)} style={{textAlign:"center",padding:14,background:`linear-gradient(135deg,${a.g},${C.bg})`}}>
-                  <div style={{fontSize:26,marginBottom:4,filter:"drop-shadow(0 2px 8px rgba(0,0,0,.5))"}}>{a.i}</div>
-                  <div style={{fontSize:10,color:C.cream,fontWeight:600}}>{a.l}</div>
-                </Card>
+
+            {/* Hijri date card */}
+            <div style={{background:C.card,borderRadius:12,padding:"10px 14px",border:`1px solid ${C.border}`,marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:8,color:C.muted,textTransform:"uppercase",letterSpacing:1}}>📅 Исламская дата</div>
+                  <div style={{fontSize:16,fontWeight:500,color:C.gold,marginTop:2}}>{hijri.day} {hijri.monthName} {hijri.year} г.х.</div>
+                </div>
+                <div style={{fontSize:11,color:C.muted}}>{now.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})}</div>
+              </div>
+            </div>
+
+            {/* Ayat of the day — clean */}
+            <div onClick={()=>switchTab("content")} style={{background:C.card,borderRadius:12,padding:14,border:`1px solid ${C.border}`,marginBottom:12,cursor:"pointer"}}>
+              <div style={{fontSize:8,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>АЯТ ДНЯ</div>
+              <div style={{fontSize:15,textAlign:"right",lineHeight:1.8,color:C.goldLight,marginBottom:6}}>{ayah.ar}</div>
+              {ayah.tl&&<div style={{fontSize:10,color:C.goldLight,marginBottom:4,fontStyle:"italic"}}>📖 {ayah.tl}</div>}
+              <div style={{fontSize:11,color:C.cream,lineHeight:1.6}}>{ayah.ru}</div>
+              <div style={{fontSize:8,color:C.muted,marginTop:4}}>— {ayah.s}, {ayah.n}</div>
+            </div>
+
+            {/* Quick access grid */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+              {[{i:"📚",l:"Обучение",t:"learn"},{i:"📖",l:"Коран",t:"quran"},{i:"🗺",l:"Святыни",t:"sites"},{i:"📡",l:"Мекка",t:"mecca"},{i:"🛍",l:"Магазин",t:"shop"},{i:"👥",l:"Умма",t:"ummah"}].map(a=>(
+                <div key={a.t} onClick={()=>switchTab(a.t)} style={{textAlign:"center",padding:"12px 8px",borderRadius:10,background:C.card,border:`1px solid ${C.border}`,cursor:"pointer"}}>
+                  <div style={{fontSize:22,marginBottom:2}}>{a.i}</div>
+                  <div style={{fontSize:9,color:C.cream,fontWeight:500}}>{a.l}</div>
+                </div>
               ))}
             </div>
           </>}
@@ -439,27 +687,229 @@ export default function KikoFull(){
           {/* ═══ PRAYER ═══ */}
           {tab==="prayer"&&<>
             <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>Время намаза</h2>
-            <p style={{color:C.muted,fontSize:11,marginBottom:14}}>{loc.name} • {now.toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"})}</p>
-            <Card style={{marginBottom:12,background:C.goldDim,padding:14}}><div style={{fontSize:12,color:C.cream,lineHeight:1.7}}>☝️ Мусульмане молятся 5 раз в день. Нажмите на намаз, чтобы увидеть количество ракаатов.</div></Card>
-            {prayers.map(p=>{const past=p.min<=cm,isN=p.name===np.name;const rk=PRAYER_RAKAATS[p.name];return(
-              <div key={p.name} style={{background:isN?`linear-gradient(135deg,${C.goldDim},${C.card})`:C.card,borderRadius:10,padding:"12px 18px",border:`1px solid ${isN?C.gold:C.border}`,opacity:past?.45:1,marginBottom:6}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:22}}>{p.icon}</span><div><div style={{fontSize:14,fontWeight:isN?700:400,color:isN?C.gold:C.cream}}>{p.name}</div><div style={{fontSize:12,color:C.muted}}>{p.ar}</div></div></div>
-                  <div style={{fontSize:22,fontWeight:300,color:isN?C.gold:C.cream,fontVariantNumeric:"tabular-nums"}}>{p.time}</div>
-                </div>
-                {rk&&<div style={{display:"flex",gap:8,marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>
-                  <span style={{fontSize:10,color:C.gold,fontWeight:600}}>Фард: {rk.fard} ракаата</span>
-                  <span style={{fontSize:10,color:C.muted}}>Сунна: {rk.sunnah}</span>
-                </div>}
+            <p style={{color:C.muted,fontSize:11,marginBottom:14}}>{loc.name} • {hijri.day} {hijri.monthName} {hijri.year} г.х.</p>
+
+            {/* Compact stats row */}
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <div style={{flex:1,background:C.card,borderRadius:12,padding:"10px 14px",border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,marginBottom:2}}>Сегодня</div>
+                <div style={{fontSize:24,fontWeight:300,color:todayDone===5?C.green:C.gold}}>{todayDone}<span style={{fontSize:12,color:C.muted}}>/5</span></div>
               </div>
-            );})}
-            <button onClick={()=>switchTab("learn")} style={{marginTop:10,width:"100%",padding:"12px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:13,fontWeight:700,cursor:"pointer"}}>📚 Как совершать намаз — пошаговая инструкция</button>
+              <div style={{flex:1,background:C.card,borderRadius:12,padding:"10px 14px",border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,marginBottom:2}}>Серия</div>
+                <div style={{fontSize:24,fontWeight:300,color:C.gold}}>{prayerStreak>0?`🔥 ${prayerStreak}`:"—"}</div>
+              </div>
+              <div style={{flex:1,background:C.card,borderRadius:12,padding:"10px 14px",border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,marginBottom:2}}>Всего</div>
+                <div style={{fontSize:24,fontWeight:300,color:C.cream}}>{totalPrayersAllTime}</div>
+              </div>
+              {totalQaza>0&&<div style={{flex:1,background:`${C.red}10`,borderRadius:12,padding:"10px 14px",border:`1px solid ${C.red}30`}}>
+                <div style={{fontSize:9,color:C.red,marginBottom:2}}>Каза</div>
+                <div style={{fontSize:24,fontWeight:300,color:C.red}}>{totalQaza}</div>
+              </div>}
+            </div>
+
+            {todayDone===5&&<div style={{textAlign:"center",marginBottom:10,padding:"8px",background:`${C.green}12`,borderRadius:10,fontSize:12,color:C.green,fontWeight:600}}>✨ МашаАллах! Все намазы совершены!</div>}
+
+            {/* Sunrise banner — first, informational */}
+            {(()=>{const sr=prayers.find(p=>p.name==="Восход");if(!sr)return null;const past=sr.min<=cm;return(
+              <div style={{display:"flex",alignItems:"center",gap:12,padding:"8px 14px",marginBottom:10,borderRadius:10,background:`linear-gradient(90deg,${C.gold}08,transparent)`,border:`1px dashed ${C.gold}30`,opacity:past?.5:1}}>
+                <span style={{fontSize:18}}>🌅</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:500,color:C.goldLight}}>Восход солнца</div>
+                  <div style={{fontSize:9,color:C.muted}}>{sr.ar} • конец времени Фаджра</div>
+                </div>
+                <div style={{fontSize:16,fontWeight:300,color:C.goldLight,fontVariantNumeric:"tabular-nums"}}>{sr.time}</div>
+              </div>
+            );})()}
+
+            {/* 5 намазов — 3 состояния: вовремя / запоздал / пропущен */}
+            {prayers.filter(p=>p.name!=="Восход").map(p=>{
+              const past=p.min<=cm,isN=p.name===np.name;
+              const rk=PRAYER_RAKAATS[p.name];
+              const status=getStatus(todayPrayers,p.name);
+              const accent=status==="ontime"?C.green:status==="late"?"#FBBF24":status==="missed"?C.red:null;
+              const borderClr=accent?`${accent}40`:isN?`${C.gold}30`:C.border;
+              const bg=accent?`${accent}0D`:isN?`${C.gold}08`:C.card;
+              return(
+              <div key={p.name} style={{padding:"12px 14px",marginBottom:6,borderRadius:12,background:bg,border:`1px solid ${borderClr}`,opacity:past&&!status&&!isN?.55:1,transition:"all .2s"}}>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <span style={{fontSize:22,width:26,textAlign:"center"}}>{p.icon}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:isN?600:500,color:accent||(isN?C.gold:C.cream)}}>{p.name}</div>
+                    <div style={{fontSize:10,color:C.muted}}>{p.ar} • {rk.fard} фард</div>
+                  </div>
+                  <div style={{fontSize:18,fontWeight:300,color:isN?C.gold:C.cream,fontVariantNumeric:"tabular-nums"}}>{p.time}</div>
+                </div>
+                {/* 3 кнопки статуса */}
+                <div style={{display:"flex",gap:6,marginTop:10}}>
+                  {[
+                    {k:"ontime",l:"Вовремя",icon:"✓",clr:C.green},
+                    {k:"late",l:"Запоздал",icon:"⏰",clr:"#FBBF24"},
+                    {k:"missed",l:"Пропустил",icon:"✗",clr:C.red},
+                  ].map(b=>{const active=status===b.k;return(
+                    <button key={b.k} onClick={()=>setPrayerStatus(p.name,b.k)} style={{flex:1,padding:"7px 4px",borderRadius:8,background:active?b.clr:"transparent",border:`1px solid ${active?b.clr:C.border}`,color:active?"#040D08":C.muted,fontSize:10,fontWeight:active?700:500,cursor:"pointer",transition:"all .15s",display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                      <span style={{fontSize:11}}>{b.icon}</span><span>{b.l}</span>
+                    </button>
+                  );})}
+                </div>
+              </div>
+              );
+            })}
+
+            {/* Weekly history */}
+            <div style={{marginTop:14}}>
+              <Label>📅 НЕДЕЛЯ</Label>
+              <div style={{display:"flex",gap:4,marginBottom:6}}>
+                {Array.from({length:7}).map((_,i)=>{
+                  const d=new Date(now);d.setDate(d.getDate()-6+i);
+                  const k=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+                  const dp=prayerLog[k]||{};
+                  const done=["Фаджр","Зухр","Аср","Магриб","Иша"].filter(n=>isDonePrayer(dp,n)).length;
+                  const isToday=i===6;
+                  return(
+                    <div key={i} onClick={()=>setHistoryOffset(i-6)} style={{flex:1,textAlign:"center",cursor:"pointer",padding:"6px 0",borderRadius:8,background:historyOffset===i-6?C.goldDim:done===5?`${C.green}10`:"transparent",border:`1px solid ${historyOffset===i-6?C.gold:done===5?`${C.green}20`:"transparent"}`,transition:"all .2s"}}>
+                      <div style={{fontSize:8,color:isToday?C.gold:C.muted,fontWeight:isToday?700:400}}>{["Вс","Пн","Вт","Ср","Чт","Пт","Сб"][d.getDay()]}</div>
+                      <div style={{fontSize:12,fontWeight:isToday?700:400,color:isToday?C.cream:C.muted}}>{d.getDate()}</div>
+                      <div style={{display:"flex",gap:1,justifyContent:"center",marginTop:3}}>
+                        {["Фаджр","Зухр","Аср","Магриб","Иша"].map(n=>{const s=getStatus(dp,n);const clr=s==="ontime"?C.green:s==="late"?"#FBBF24":s==="missed"?C.red:"rgba(255,255,255,.1)";return<div key={n} style={{width:4,height:4,borderRadius:"50%",background:clr}}/>;})}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* History detail for selected day — 3 states */}
+              {historyOffset!==0&&(()=>{
+                const hd=new Date(now);hd.setDate(hd.getDate()+historyOffset);
+                const hk=`${hd.getFullYear()}-${hd.getMonth()+1}-${hd.getDate()}`;
+                const hp=prayerLog[hk]||{};
+                const setHistoryStatus=(name,status)=>{
+                  setPrayerLog(prev=>{
+                    const day=prev[hk]||{};
+                    const cur=getStatus(day,name);
+                    const next=cur===status?null:status;
+                    const newDay={...day};
+                    if(next===null)delete newDay[name];else newDay[name]=next;
+                    const updated={...prev,[hk]:newDay};
+                    try{localStorage.setItem("kiko_prayer_log",JSON.stringify(updated));}catch{}
+                    return updated;
+                  });
+                };
+                return(
+                  <div style={{background:C.card,borderRadius:10,padding:12,border:`1px solid ${C.border}`}}>
+                    <div style={{fontSize:11,color:C.muted,marginBottom:10}}>{hd.toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"})}</div>
+                    {["Фаджр","Зухр","Аср","Магриб","Иша"].map(n=>{
+                      const s=getStatus(hp,n);
+                      return(
+                      <div key={n} style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
+                        <span style={{fontSize:10,color:C.cream,flex:1,minWidth:50}}>{n}</span>
+                        {[{k:"ontime",icon:"✓",clr:C.green},{k:"late",icon:"⏰",clr:"#FBBF24"},{k:"missed",icon:"✗",clr:C.red}].map(b=>{const a=s===b.k;return(
+                          <button key={b.k} onClick={()=>setHistoryStatus(n,b.k)} style={{flex:1,padding:"5px 4px",borderRadius:6,background:a?b.clr:"transparent",border:`1px solid ${a?b.clr:C.border}`,color:a?"#040D08":C.muted,fontSize:11,cursor:"pointer",fontWeight:a?700:400}}>{b.icon}</button>
+                        );})}
+                      </div>
+                    );})}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Backlog: старые каза (до установки приложения) */}
+            <div style={{marginTop:14}}>
+              <button onClick={()=>setShowBacklog(s=>!s)} style={{width:"100%",padding:"10px 14px",background:"transparent",border:`1px dashed ${C.border}`,borderRadius:10,color:C.muted,fontSize:11,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>⏳ Старый долг каза (до использования приложения)</span>
+                <span style={{color:totalManualQaza>0?C.red:C.muted,fontWeight:600}}>{totalManualQaza} {showBacklog?"▲":"▼"}</span>
+              </button>
+              {showBacklog&&<div style={{background:C.card,borderRadius:10,padding:12,border:`1px solid ${C.border}`,marginTop:6}}>
+                <div style={{fontSize:10,color:C.muted,marginBottom:10,lineHeight:1.5}}>Если до установки приложения у вас уже был долг — добавьте его количество. Уменьшайте по мере возмещения.</div>
+                {["Фаджр","Зухр","Аср","Магриб","Иша"].map(n=>(
+                  <div key={n} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:`1px solid ${C.border}`}}>
+                    <span style={{fontSize:11,color:qazaLog[n]>0?C.red:C.cream}}>{n}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <button onClick={()=>addQaza(n,-1)} style={{width:24,height:24,borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.muted,fontSize:13,cursor:"pointer"}}>−</button>
+                      <span style={{fontSize:13,color:qazaLog[n]>0?C.red:C.muted,minWidth:24,textAlign:"center",fontVariantNumeric:"tabular-nums"}}>{qazaLog[n]||0}</span>
+                      <button onClick={()=>addQaza(n,1)} style={{width:24,height:24,borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.muted,fontSize:13,cursor:"pointer"}}>+</button>
+                    </div>
+                  </div>
+                ))}
+              </div>}
+            </div>
+
+            <button onClick={()=>switchTab("learn")} style={{marginTop:14,width:"100%",padding:"12px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:13,fontWeight:700,cursor:"pointer"}}>📚 Как совершать намаз — пошаговая инструкция</button>
           </>}
+
+          {/* ═══ CALENDAR ═══ */}
+          {tab==="calendar"&&(()=>{
+            const todayH=toHijri(now);
+            const upcoming=HOLIDAYS.map(h=>({...h,...nextHijriDate(h.m,h.d,now)})).filter(h=>h.date).sort((a,b)=>a.daysLeft-b.daysLeft);
+            const months=["Мухаррам","Сафар","Раби аль-Авваль","Раби ас-Сани","Джумада аль-Уля","Джумада ас-Сания","Раджаб","Шаабан","Рамадан","Шавваль","Зуль-Каада","Зуль-Хиджа"];
+            return(<>
+              <h2 style={{fontSize:20,fontWeight:200,color:C.gold,letterSpacing:1,marginBottom:2}}>Исламский календарь</h2>
+              <p style={{color:C.muted,fontSize:11,marginBottom:14}}>Праздники и памятные даты по хиджре</p>
+
+              <Card style={{background:`linear-gradient(135deg,${C.gold}18,transparent)`,border:`1px solid ${C.gold}40`,padding:"18px 20px",marginBottom:14}}>
+                <div style={{fontSize:10,color:C.gold,letterSpacing:2,marginBottom:6}}>СЕГОДНЯ</div>
+                <div style={{fontSize:28,fontWeight:200,color:C.cream,lineHeight:1.1,marginBottom:4}}>{todayH.day} {todayH.monthName}</div>
+                <div style={{fontSize:13,color:C.goldLight}}>{todayH.year} г. Хиджры</div>
+                <div style={{fontSize:11,color:C.muted,marginTop:6}}>{now.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric",weekday:"long"})}</div>
+              </Card>
+
+              <Card style={{marginBottom:14,padding:14}}>
+                <Label>МЕСЯЦЫ ХИДЖРЫ</Label>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:4,marginTop:4}}>
+                  {months.map((m,i)=>{const cur=i+1===todayH.month;return(
+                    <div key={i} style={{padding:"6px 10px",borderRadius:6,background:cur?`${C.gold}15`:"transparent",border:`1px solid ${cur?C.gold+"60":"transparent"}`,display:"flex",justifyContent:"space-between",fontSize:11}}>
+                      <span style={{color:cur?C.gold:C.cream}}>{i+1}. {m}</span>
+                      {cur&&<span style={{fontSize:9,color:C.gold}}>●</span>}
+                    </div>
+                  );})}
+                </div>
+              </Card>
+
+              <div style={{fontSize:10,color:C.gold,letterSpacing:2,marginBottom:8,marginTop:4}}>БЛИЖАЙШИЕ ПРАЗДНИКИ</div>
+              {upcoming.map((h,i)=>{
+                const gr=h.date.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"});
+                const dl=h.daysLeft;
+                const isToday=dl===0;
+                return(
+                  <div key={i} style={{background:C.card,borderRadius:12,border:`1px solid ${isToday?h.clr:C.border}`,marginBottom:8,overflow:"hidden",boxShadow:isToday?`0 0 24px ${h.clr}30`:"none"}}>
+                    <div style={{padding:"12px 14px",background:`linear-gradient(135deg,${h.clr}15,transparent)`,display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{width:44,height:44,borderRadius:10,background:`${h.clr}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{h.icon}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:14,fontWeight:600,color:h.clr,lineHeight:1.2}}>{h.n}</div>
+                        <div style={{fontSize:10,color:C.goldLight,marginTop:2}}>{h.ar}</div>
+                        <div style={{fontSize:10,color:C.muted,marginTop:3}}>{h.d} {months[h.m-1]} · {gr}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        {isToday?<Badge color={h.clr}>СЕГОДНЯ</Badge>:
+                          <><div style={{fontSize:20,fontWeight:200,color:h.clr,lineHeight:1}}>{dl}</div><div style={{fontSize:9,color:C.muted,marginTop:2}}>{dl===1?"день":dl<5?"дня":"дней"}</div></>}
+                      </div>
+                    </div>
+                    <div style={{padding:"10px 14px",borderTop:`1px solid ${C.border}`}}>
+                      <div style={{fontSize:11,color:C.cream,lineHeight:1.6,marginBottom:6}}>{h.what}</div>
+                      <div style={{fontSize:10,color:h.clr,fontWeight:600,marginBottom:3}}>КАК ОТМЕЧАЮТ</div>
+                      <div style={{fontSize:11,color:C.muted,lineHeight:1.6}}>{h.how}</div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <Card style={{marginTop:10,background:C.goldDim,padding:12}}>
+                <div style={{fontSize:11,color:C.cream,lineHeight:1.6}}>
+                  ☝️ Даты рассчитаны по астрономическому алгоритму Хиджры. Фактическое начало месяца может отличаться на ±1 день из-за видимости полумесяца (рюйя) в разных странах.
+                </div>
+              </Card>
+            </>);
+          })()}
 
           {/* ═══ LEARN NAMAZ ═══ */}
           {tab==="learn"&&<>
             {guideView==="overview"&&<>
-              <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:14}}>Обучение намазу</h2>
+              <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:14}}>Обучение исламу</h2>
+              <Card onClick={()=>setGuideView("pillars")} style={{marginBottom:8,display:"flex",alignItems:"center",gap:14,padding:16}}>
+                <div style={{fontSize:32}}>🕋</div>
+                <div style={{flex:1}}><div style={{fontSize:15,fontWeight:600,color:C.cream}}>5 столпов ислама</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>Основы веры: как выполнять по канонам</div></div>
+                <span style={{color:C.muted,fontSize:16}}>→</span>
+              </Card>
               <Card onClick={()=>setGuideView("wudu")} style={{marginBottom:8,display:"flex",alignItems:"center",gap:14,padding:16}}>
                 <div style={{fontSize:32}}>💧</div>
                 <div style={{flex:1}}><div style={{fontSize:15,fontWeight:600,color:C.cream}}>Омовение (Вуду)</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>10 шагов подготовки к намазу</div></div>
@@ -479,16 +929,39 @@ export default function KikoFull(){
                   </div>
                 ))}
               </Card>
-              <Card style={{background:C.goldDim,padding:14}}>
-                <div style={{fontSize:12,color:C.cream,lineHeight:1.8}}>
-                  <b>5 столпов ислама:</b><br/>
-                  1. Шахада — свидетельство веры<br/>
-                  2. Намаз — пятикратная молитва<br/>
-                  3. Закят — обязательная милостыня<br/>
-                  4. Саум — пост в Рамадан<br/>
-                  5. Хадж — паломничество в Мекку
+            </>}
+
+            {guideView==="pillars"&&<>
+              <button onClick={()=>setGuideView("overview")} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Обучение</button>
+              <h2 style={{fontSize:20,fontWeight:300,color:C.gold,marginBottom:4}}>🕋 5 столпов ислама</h2>
+              <p style={{color:C.muted,fontSize:11,marginBottom:14,lineHeight:1.6}}>«Ислам построен на пяти: свидетельстве, что нет божества кроме Аллаха и что Мухаммад — Его посланник, совершении намаза, выплате закята, хадже и посте в Рамадан». <i>(Бухари, Муслим)</i></p>
+              {PILLARS.map((p,i)=>(
+                <div key={i} style={{background:C.card,borderRadius:12,border:`1px solid ${C.border}`,marginBottom:10,overflow:"hidden"}}>
+                  <div style={{padding:"14px 16px",background:`linear-gradient(135deg,${p.clr}15,transparent)`,borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:`${p.clr}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{p.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:10,color:C.muted,letterSpacing:1}}>СТОЛП {i+1}</div>
+                      <div style={{fontSize:16,fontWeight:600,color:p.clr}}>{p.n} <span style={{fontSize:12,color:C.goldLight,fontWeight:400}}>· {p.ar}</span></div>
+                      <div style={{fontSize:10,color:C.muted,marginTop:2}}>{p.tl}</div>
+                    </div>
+                  </div>
+                  <div style={{padding:"12px 16px"}}>
+                    <div style={{fontSize:12,color:C.cream,lineHeight:1.7,marginBottom:10}}>{p.what}</div>
+                    <div style={{fontSize:10,color:p.clr,fontWeight:600,letterSpacing:1,marginBottom:6}}>КАК ВЫПОЛНЯТЬ</div>
+                    <ol style={{paddingLeft:18,margin:0}}>
+                      {p.how.map((h,j)=>(
+                        <li key={j} style={{fontSize:12,color:C.cream,lineHeight:1.7,marginBottom:4}}>{h}</li>
+                      ))}
+                    </ol>
+                    {p.quran&&<div style={{marginTop:10,padding:"10px 12px",background:`${p.clr}08`,borderLeft:`2px solid ${p.clr}`,borderRadius:"0 8px 8px 0"}}>
+                      <div style={{fontSize:13,textAlign:"right",color:C.goldLight,lineHeight:1.8,marginBottom:4}}>{p.quran.ar}</div>
+                      <div style={{fontSize:11,color:C.cream,lineHeight:1.6,fontStyle:"italic"}}>«{p.quran.ru}»</div>
+                      <div style={{fontSize:9,color:C.muted,marginTop:4}}>— {p.quran.src}</div>
+                    </div>}
+                    {p.note&&<div style={{marginTop:8,fontSize:10,color:C.muted,lineHeight:1.5}}><b style={{color:p.clr}}>Важно:</b> {p.note}</div>}
+                  </div>
                 </div>
-              </Card>
+              ))}
             </>}
 
             {guideView==="wudu"&&<>
@@ -735,6 +1208,109 @@ export default function KikoFull(){
             <button onClick={()=>switchTab("chat")} style={{marginTop:10,width:"100%",padding:"10px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:12,fontWeight:700,cursor:"pointer"}}>💬 Спросить AI: «Можно ли это есть?»</button>
           </>}
 
+          {/* ═══ SHOP ═══ */}
+          {tab==="shop"&&!selProduct&&!showCart&&<>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:200,color:C.gold,letterSpacing:1}}>Магазин</h2>
+                <p style={{color:C.muted,fontSize:10,marginTop:2}}>{SHOP_ITEMS.filter(it=>shopCat==="all"||it.cat===shopCat).length} товаров</p>
+              </div>
+              <button onClick={()=>setShowCart(true)} style={{background:cart.length>0?C.gold:"transparent",border:`1px solid ${cart.length>0?C.gold:C.border}`,borderRadius:10,padding:"8px 14px",color:cart.length>0?C.bg:C.cream,fontSize:12,fontWeight:600,cursor:"pointer",position:"relative",display:"flex",alignItems:"center",gap:6}}>
+                <span style={{fontSize:14}}>🛒</span>
+                <span>Корзина</span>
+                {cart.length>0&&<span style={{minWidth:18,height:18,padding:"0 5px",borderRadius:9,background:C.bg,color:C.gold,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{cart.length}</span>}
+              </button>
+            </div>
+
+            {/* Category pills */}
+            <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
+              {SHOP_CATS.map(c=>{const active=shopCat===c.id;return(
+                <button key={c.id} onClick={()=>setShopCat(c.id)} style={{padding:"7px 14px",borderRadius:20,border:`1px solid ${active?C.gold:C.border}`,background:active?C.gold:"transparent",color:active?C.bg:C.muted,fontSize:11,fontWeight:active?700:500,cursor:"pointer",whiteSpace:"nowrap",transition:"all .2s",display:"flex",alignItems:"center",gap:4}}>
+                  <span>{c.icon}</span><span>{c.l}</span>
+                </button>
+              );})}
+            </div>
+
+            {/* Products grid */}
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)",gap:10}}>
+              {SHOP_ITEMS.filter(it=>shopCat==="all"||it.cat===shopCat).map(it=>{
+                const inCart=cart.find(c=>c.id===it.id);
+                return(
+                <div key={it.id} onClick={()=>setSelProduct(it)} style={{borderRadius:14,overflow:"hidden",background:C.card,border:`1px solid ${C.border}`,cursor:"pointer",transition:"all .25s ease",display:"flex",flexDirection:"column"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=C.gold+"60";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform="none";}}>
+                  <div style={{position:"relative",background:"#0a1510"}}>
+                    <img src={it.img} alt={it.n} loading="lazy" style={{width:"100%",height:isMobile?130:150,objectFit:"cover",display:"block"}}/>
+                    {it.badge&&<span style={{position:"absolute",top:8,left:8,padding:"3px 8px",borderRadius:6,background:it.badgeColor||C.gold,color:"#040D08",fontSize:9,fontWeight:700,letterSpacing:.3}}>{it.badge}</span>}
+                    {inCart&&<span style={{position:"absolute",top:8,right:8,width:22,height:22,borderRadius:"50%",background:C.green,color:"#040D08",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span>}
+                  </div>
+                  <div style={{padding:"10px 12px",flex:1,display:"flex",flexDirection:"column"}}>
+                    <div style={{fontSize:12,fontWeight:600,color:C.cream,lineHeight:1.3,marginBottom:3,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden",minHeight:32}}>{it.n}</div>
+                    <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:6}}>
+                      <span style={{fontSize:9,color:"#FBBF24"}}>★</span>
+                      <span style={{fontSize:10,color:C.cream,fontWeight:500}}>{it.rating}</span>
+                      <span style={{fontSize:9,color:C.muted}}>({it.reviews})</span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"baseline",gap:5,marginTop:"auto"}}>
+                      <span style={{fontSize:15,fontWeight:700,color:C.gold}}>{it.price}</span>
+                      {it.oldPrice&&<span style={{fontSize:10,color:C.muted,textDecoration:"line-through"}}>{it.oldPrice}</span>}
+                    </div>
+                  </div>
+                </div>
+              );})}
+            </div>
+          </>}
+
+          {/* Shop — Product detail */}
+          {tab==="shop"&&selProduct&&!showCart&&<>
+            <button onClick={()=>setSelProduct(null)} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Все товары</button>
+            <div style={{borderRadius:16,overflow:"hidden",marginBottom:16,boxShadow:"0 8px 40px rgba(0,0,0,.5)"}}>
+              <img src={selProduct.img} alt={selProduct.n} style={{width:"100%",height:isMobile?250:320,objectFit:"cover",display:"block"}} loading="lazy"/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+              <h2 style={{fontSize:20,fontWeight:600,color:C.cream,flex:1}}>{selProduct.n}</h2>
+              <div style={{fontSize:18,color:C.goldLight,flexShrink:0,marginLeft:8}}>{selProduct.ar}</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+              <span style={{fontSize:9,color:"#FBBF24"}}>{"★".repeat(Math.floor(selProduct.rating))}</span>
+              <span style={{fontSize:11,color:C.muted}}>{selProduct.rating} • {selProduct.reviews} отзывов</span>
+              {selProduct.badge&&<Badge color={selProduct.badgeColor}>{selProduct.badge}</Badge>}
+            </div>
+            <Card style={{marginBottom:12}}><Label>ОПИСАНИЕ</Label><div style={{fontSize:13,color:C.cream,lineHeight:1.8}}>{selProduct.desc}</div></Card>
+            <Card style={{marginBottom:12,padding:14}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div><span style={{fontSize:28,fontWeight:300,color:C.gold}}>{selProduct.price}</span>{selProduct.oldPrice&&<span style={{fontSize:14,color:C.muted,textDecoration:"line-through",marginLeft:8}}>{selProduct.oldPrice}</span>}</div>
+              </div>
+            </Card>
+            <button onClick={()=>{addToCart(selProduct);}} style={{width:"100%",padding:"14px",background:C.gold,border:"none",borderRadius:12,color:C.bg,fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:8}}>🛒 В корзину</button>
+            <button onClick={()=>{addToCart(selProduct);setShowCart(true);}} style={{width:"100%",padding:"12px",background:C.card,border:`1px solid ${C.gold}`,borderRadius:12,color:C.gold,fontSize:13,fontWeight:600,cursor:"pointer"}}>Купить сейчас →</button>
+          </>}
+
+          {/* Shop — Cart */}
+          {tab==="shop"&&showCart&&<>
+            <button onClick={()=>setShowCart(false)} style={{background:"none",border:"none",color:C.gold,fontSize:12,cursor:"pointer",marginBottom:10,padding:0}}>← Магазин</button>
+            <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:14}}>🛒 Корзина</h2>
+            {cart.length===0&&<Card style={{padding:30,textAlign:"center"}}><div style={{fontSize:40,marginBottom:10}}>🛒</div><div style={{fontSize:14,color:C.muted}}>Корзина пуста</div><button onClick={()=>setShowCart(false)} style={{marginTop:12,padding:"10px 24px",background:C.gold,border:"none",borderRadius:10,color:C.bg,fontSize:12,fontWeight:700,cursor:"pointer"}}>За покупками →</button></Card>}
+            {cart.map((it,i)=>(
+              <div key={i} style={{display:"flex",gap:12,background:C.card,borderRadius:10,border:`1px solid ${C.border}`,padding:10,marginBottom:6,alignItems:"center"}}>
+                <img src={it.img} alt={it.n} style={{width:56,height:56,borderRadius:8,objectFit:"cover",flexShrink:0}} loading="lazy"/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:600,color:C.cream,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.n}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.gold,marginTop:2}}>{it.price}</div>
+                </div>
+                <button onClick={()=>removeFromCart(i)} style={{background:"none",border:"none",color:C.red,fontSize:16,cursor:"pointer",padding:4}}>✕</button>
+              </div>
+            ))}
+            {cart.length>0&&<>
+              <Card style={{marginTop:10,padding:14}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:12,color:C.muted}}>Итого ({cart.length} {cart.length===1?"товар":cart.length<5?"товара":"товаров"})</div>
+                  <div style={{fontSize:22,fontWeight:600,color:C.gold}}>{cartTotal.toLocaleString()} сом</div>
+                </div>
+              </Card>
+              <button onClick={()=>{alert(`Заказ оформлен!\n\nТоваров: ${cart.length}\nСумма: ${cartTotal.toLocaleString()} сом\n\nС вами свяжутся для уточнения доставки.`);setCart([]);try{localStorage.setItem("kiko_cart","[]");}catch{}setShowCart(false);}} style={{width:"100%",marginTop:10,padding:"14px",background:C.gold,border:"none",borderRadius:12,color:C.bg,fontSize:15,fontWeight:700,cursor:"pointer"}}>Оформить заказ →</button>
+              <div style={{fontSize:10,color:C.muted,textAlign:"center",marginTop:8}}>Демо-режим. Реальная оплата не производится.</div>
+            </>}
+          </>}
+
           {/* ═══ UMMAH ROOMS ═══ */}
           {tab==="ummah"&&!selRoom&&<>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -796,7 +1372,7 @@ export default function KikoFull(){
 
             {selRoom.proj&&<Card style={{padding:0,overflow:"hidden",marginBottom:12}}>
               {selRoom.proj==="Мекка Live"||selRoom.proj==="Аль-Азхар Live"?
-                <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src="https://www.youtube.com/embed/gvhVbNlqMOc?autoplay=0" title="Stream" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div>:
+                <div style={{aspectRatio:"16/9",background:"#000"}}><iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${selRoom.proj==="Аль-Азхар Live"?"ceFhEjGP0yA":"gvhVbNlqMOc"}?autoplay=0`} title="Stream" frameBorder="0" allow="autoplay;encrypted-media" allowFullScreen style={{border:"none"}}/></div>:
                 <div style={{aspectRatio:"16/9",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(180deg,rgba(45,212,191,.05),rgba(4,13,8,.9))"}}>
                   <div style={{textAlign:"center"}}><div style={{fontSize:36,marginBottom:8}}>📽</div><div style={{fontSize:14,color:C.gold}}>{selRoom.proj}</div></div>
                 </div>
@@ -806,10 +1382,10 @@ export default function KikoFull(){
             {!joined?<button onClick={()=>setJoined(true)} style={{width:"100%",padding:"14px",background:C.gold,border:"none",borderRadius:12,color:C.bg,fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:14}}>🕌 Присоединиться</button>:
             <div style={{marginBottom:14}}>
               <div style={{background:C.card,borderRadius:10,padding:12,border:`1px solid ${C.gold}30`,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-                <button style={{width:42,height:42,borderRadius:"50%",background:C.green,border:"none",fontSize:18,cursor:"pointer"}}>🎤</button>
-                <button style={{width:42,height:42,borderRadius:"50%",background:C.goldDim,border:`1px solid ${C.border}`,fontSize:16,cursor:"pointer",color:C.gold}}>📽</button>
-                <button style={{width:42,height:42,borderRadius:"50%",background:C.goldDim,border:`1px solid ${C.border}`,fontSize:16,cursor:"pointer",color:C.gold}}>🤲</button>
-                <button onClick={()=>setJoined(false)} style={{width:42,height:42,borderRadius:"50%",background:C.red,border:"none",fontSize:16,cursor:"pointer"}}>✕</button>
+                <button onClick={()=>setMicOn(v=>!v)} title={micOn?"Выключить микрофон":"Включить микрофон"} style={{width:42,height:42,borderRadius:"50%",background:micOn?C.green:C.goldDim,border:micOn?"none":`1px solid ${C.border}`,fontSize:18,cursor:"pointer",color:micOn?C.bg:C.gold}}>{micOn?"🎤":"🔇"}</button>
+                <button onClick={()=>setShowProj(v=>!v)} title="Показать/скрыть проекцию" style={{width:42,height:42,borderRadius:"50%",background:showProj?`${C.gold}30`:C.goldDim,border:`1px solid ${showProj?C.gold:C.border}`,fontSize:16,cursor:"pointer",color:C.gold}}>📽</button>
+                <button onClick={()=>switchTab("content")} title="Дуа" style={{width:42,height:42,borderRadius:"50%",background:C.goldDim,border:`1px solid ${C.border}`,fontSize:16,cursor:"pointer",color:C.gold}}>🤲</button>
+                <button onClick={()=>{setJoined(false);setMicOn(false);}} title="Выйти" style={{width:42,height:42,borderRadius:"50%",background:C.red,border:"none",fontSize:16,cursor:"pointer"}}>✕</button>
               </div>
               <div style={{display:"flex",justifyContent:"center",gap:20,marginTop:6,fontSize:8,color:C.muted}}><span>Микрофон</span><span>Проекция</span><span>Дуа</span><span>Выйти</span></div>
             </div>}
@@ -843,21 +1419,31 @@ export default function KikoFull(){
 
           {/* ═══ AI CHAT ═══ */}
           {tab==="chat"&&<>
-            <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>AI Помощник</h2>
-            <p style={{color:C.muted,fontSize:11,marginBottom:10}}>Исламский помощник • Офлайн</p>
+            <h2 style={{fontSize:18,fontWeight:300,color:C.gold,marginBottom:2}}>🤖 AI Помощник</h2>
+            <p style={{color:C.muted,fontSize:11,marginBottom:4}}>Мульти-агентная система • 5 специалистов</p>
+            <div style={{display:"flex",gap:4,marginBottom:10,flexWrap:"wrap"}}>
+              {[{n:"📖 Коран",d:"quran"},{n:"📚 Хадисы",d:"hadith"},{n:"⚖️ Фикх",d:"fiqh"},{n:"🕌 Намаз",d:"prayer"},{n:"🌙 Общий",d:"general"}].map(a=>
+                <span key={a.d} style={{padding:"2px 8px",borderRadius:10,background:C.goldDim,color:C.goldLight,fontSize:9,border:`1px solid ${C.border}`}}>{a.n}</span>
+              )}
+            </div>
             {chatMsgs.length===0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:12}}>
-              {["С чего начать молитву?","Что такое халяль?","Как делать омовение?","Условия намаза","Правила закята","Зачем нужен пост?"].map(q=>
+              {["Расскажи о суре Аль-Кахф","Как правильно делать намаз?","Что такое халяль?","Хадис о терпении","Правила закята","Дуа перед сном"].map(q=>
                 <button key={q} onClick={()=>setChatIn(q)} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"5px 12px",color:C.cream,fontSize:10,cursor:"pointer"}}>{q}</button>
               )}
             </div>}
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10,maxHeight:isMobile?"45vh":"50vh",overflowY:"auto"}}>
-              {chatMsgs.map((m,i)=><div key={i} style={{alignSelf:m.r==="u"?"flex-end":"flex-start",maxWidth:"85%",background:m.r==="u"?C.gold:C.card,color:m.r==="u"?C.bg:C.cream,borderRadius:12,padding:"8px 14px",fontSize:12,lineHeight:1.7,border:m.r==="u"?"none":`1px solid ${C.border}`,whiteSpace:"pre-wrap"}}>{m.t}</div>)}
-              {chatLoad&&<div style={{background:C.card,borderRadius:12,padding:"8px 14px",border:`1px solid ${C.border}`,color:C.muted,fontSize:12}}>Думаю...</div>}
+              {chatMsgs.map((m,i)=><div key={i} style={{alignSelf:m.r==="u"?"flex-end":"flex-start",maxWidth:"85%"}}>
+                {m.r==="a"&&m.agent&&<div style={{fontSize:9,color:C.gold,marginBottom:2,fontWeight:600}}>{m.icon} {m.agent}</div>}
+                <div style={{background:m.r==="u"?C.gold:C.card,color:m.r==="u"?C.bg:C.cream,borderRadius:12,padding:"8px 14px",fontSize:12,lineHeight:1.7,border:m.r==="u"?"none":`1px solid ${C.border}`,whiteSpace:"pre-wrap"}}>{m.t}</div>
+              </div>)}
+              {chatLoad&&<div style={{alignSelf:"flex-start",maxWidth:"85%"}}><div style={{fontSize:9,color:C.gold,marginBottom:2,fontWeight:600}}>⏳ {chatAgent}</div><div style={{background:C.card,borderRadius:12,padding:"8px 14px",border:`1px solid ${C.border}`,color:C.muted,fontSize:12}}>
+                <span style={{display:"inline-block",animation:"pulse 1s infinite"}}>●</span> Анализирую вопрос...
+              </div></div>}
               <div ref={chatRef}/>
             </div>
             <div style={{display:"flex",gap:6}}>
-              <input value={chatIn} onChange={e=>setChatIn(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChat()} placeholder="Спросите о религии..." style={{flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"9px 14px",color:C.cream,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-              <button onClick={sendChat} disabled={!chatIn.trim()} style={{background:chatIn.trim()?C.gold:C.accent,border:"none",borderRadius:10,padding:"9px 16px",color:chatIn.trim()?C.bg:C.muted,fontSize:13,fontWeight:700,cursor:chatIn.trim()?"pointer":"default",flexShrink:0}}>→</button>
+              <input value={chatIn} onChange={e=>setChatIn(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChat()} placeholder="Спросите о Коране, хадисах, фикхе..." style={{flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:"9px 14px",color:C.cream,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
+              <button onClick={sendChat} disabled={!chatIn.trim()||chatLoad} style={{background:chatIn.trim()&&!chatLoad?C.gold:C.accent,border:"none",borderRadius:10,padding:"9px 16px",color:chatIn.trim()&&!chatLoad?C.bg:C.muted,fontSize:13,fontWeight:700,cursor:chatIn.trim()&&!chatLoad?"pointer":"default",flexShrink:0}}>→</button>
             </div>
           </>}
 

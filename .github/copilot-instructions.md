@@ -1,16 +1,30 @@
-Это исламское приложение KIKO — PWA на React 19 + Vite 8.
+Это исламское приложение KIKO (Mizan) — PWA на React 19 + Vite 8.
+
+## Система агентов
+Используй промпт-файлы из `.github/prompts/` для специализированных задач:
+- `/main` — оркестратор: планирует задачи, назначает агентов
+- `/frontend` — React/JSX код, компоненты, хуки
+- `/design` — UI/UX, стили, анимации, glassmorphism
+- `/pwa` — PWA, сервис-воркер, деплой Vercel
+- `/debug` — поиск и исправление ошибок
+- `/content` — исламский контент (аяты, хадисы, дуа с ташкилем)
 
 ## Стек
 - React 19 (JSX, без TypeScript для компонентов)
 - Vite 8 для сборки
-- Vercel для деплоя
+- Vercel для деплоя (+ Python serverless для AI)
 - PWA (manifest.json, sw.js)
+- Groq API (бесплатный LLM) для AI-чата
 
 ## Структура
 - `src/App.jsx` — весь код приложения (компоненты, данные, хуки)
+- `api/chat.py` — Python serverless (Groq мульти-агенты)
+- `api/requirements.txt` — зависимости Python
+- `vercel.json` — конфигурация Vercel (роутинг API)
 - `public/manifest.json` — PWA манифест
 - `public/sw.js` — сервис-воркер (бампай версию кэша при изменениях)
 - `index.html` — точка входа
+- `.github/prompts/` — промпт-агенты для кодинга
 
 ## Команды
 - `npm run build` — сборка (проверяй перед деплоем)
